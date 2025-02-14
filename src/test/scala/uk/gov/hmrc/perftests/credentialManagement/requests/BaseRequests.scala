@@ -16,8 +16,32 @@
 
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
+/*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ */
+
+import io.gatling.core.Predef._
+import io.gatling.core.check.CheckBuilder
+import io.gatling.core.check.css.CssCheckType
+import jodd.lagarto.dom.NodeSelector
 import uk.gov.hmrc.performance.conf.ServicesConfiguration
+
+import scala.util.Random
 
 trait BaseRequests extends ServicesConfiguration {
 
+  def saveCsrfToken: CheckBuilder[CssCheckType, NodeSelector, String] = css("input[name='csrfToken']", "value").optional.saveAs("csrfToken")
+  def saveJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("form[method='POST']", "action".takeRight(36)).optional.saveAs("journeyId")
+  def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
+
+
+  val feeder = Iterator.continually {
+    Map(
+      "randomIdentityProviderId" -> s"perf_${Random.alphanumeric.take(30).mkString}",
+      "randomEmail"          -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com"
+    )
+  }
+
 }
+
