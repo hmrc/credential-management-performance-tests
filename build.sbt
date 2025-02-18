@@ -1,4 +1,4 @@
-name := "cradential-management-performance-tests"
+name := "credential-management-performance-tests"
 
 version := "0.1"
 

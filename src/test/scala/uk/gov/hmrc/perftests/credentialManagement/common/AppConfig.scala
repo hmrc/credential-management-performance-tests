@@ -40,5 +40,7 @@ object AppConfig extends ServicesConfiguration {
   val acfFeUrl: String = baseUrlFor("account-context-fixer-frontend")
   val acfBeUrl: String = baseUrlFor("account-context-fixer")
 
+  val camBeUrl: String = baseUrlFor("credential-management")
+
 }
 

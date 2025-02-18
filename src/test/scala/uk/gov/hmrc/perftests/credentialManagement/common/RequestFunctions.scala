@@ -34,6 +34,8 @@ object RequestFunctions {
   val olfgSignedJWTPattern: String = """request=([^"]+)"""
   val olfgContinueCodePattern: String = """code=([^"]+)&state="""
   val bearerPattern: String = """^GNAP.*?(Bearer .*?)$|^(Bearer .*?)GNAP.*?$|^(Bearer .*?)$"""
+  val contextJourneyIdPattern: String = """contextJourneyId=([^"]+)"""
+  val ninoPattern = """id="ninoAccessChoice" value="([^"]+)""""
 
   def saveCsrfToken: CheckBuilder[RegexCheckType, String, String] = regex(
     _ => CsrfPattern
@@ -76,5 +78,17 @@ object RequestFunctions {
   def saveBearerToken: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
     "Authorization", bearerPattern
   ).saveAs("bearerToken")
+
+  def saveContextJourneyId: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
+    "body", contextJourneyIdPattern
+  ).saveAs("ContextJourneyId")
+
+  def extractContextJourneyId(responseBody: String): String = {
+    val pattern = """contextJourneyId=([^"]+)""".r
+    pattern.findFirstMatchIn(responseBody).map(_.group(1)).getOrElse("")
+  }
+
+  def saveNino: CheckBuilder[RegexCheckType, String, String] = regex(ninoPattern).saveAs("nino")
+
 
 }

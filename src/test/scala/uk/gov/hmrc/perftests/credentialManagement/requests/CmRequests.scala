@@ -17,11 +17,10 @@
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
 import io.gatling.core.Predef._
-import io.gatling.http.Predef._
 import io.gatling.core.action.builder.ActionBuilder
-import io.gatling.core.structure.ChainBuilder
+import io.gatling.http.Predef.{header, _}
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
-import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions.saveOlfgJourneyId
+import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 trait CmRequests extends BaseRequests {
   // NOTE: browser cookies are managed by Gatling, along with state about the current location.
@@ -30,8 +29,7 @@ trait CmRequests extends BaseRequests {
   def postOneLoginAccountCreate: List[ActionBuilder] = exec(
     http("Create account in IDP store")
       .post(s"$ctxUrl/identity-provider-account-context/accounts")
-      .body(StringBody(
-        s"""|
+      .body(StringBody(s"""|
           |{
             |  "action": "create",
             |  "identityProviderId": "$${randomIdentityProviderId}",
@@ -40,9 +38,7 @@ trait CmRequests extends BaseRequests {
             |}
             |""".stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
-      .check(
-        status.is(201),
-        jsonPath("$..caUserId").saveAs("caUserId"))
+      .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
   ).feed(feeder).actionBuilders
 
@@ -55,8 +51,7 @@ trait CmRequests extends BaseRequests {
 
   def postAcfInitialise: ActionBuilder = http("POST initialise for a verified journey")
     .post(s"$acfBeUrl/account-context-fixer/initialise")
-    .body(StringBody(
-      """|
+    .body(StringBody("""|
          |{
          | "action": "VERIFIED_CONTEXT",
          | "completionUrl":"https://www.staging.tax.service.gov.uk/auth-login-stub/gg-sign-in",
@@ -72,183 +67,225 @@ trait CmRequests extends BaseRequests {
     .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
     .check(
       status.is(200),
-      jsonPath("$..startUrl").saveAs("initialiseStart")
+      bodyString.transform(extractContextJourneyId).saveAs("contextJourneyId")
     )
 
-  // user must be logged in on order to access this FE page
-
-  def getStartContextJourney: ActionBuilder = {
+  def getNinoAccess: ActionBuilder =
     if (runLocal) {
-      http("GET the start of the context journey")
-        .get(s"$${initialiseStart}")
+      http("GET the start of the NINO access page")
+        .get(
+          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
         .check(
-          status.is(303),
-          header("Location").saveAs("linkRecordRedirect")
+          status.is(200)
+        )
+        .check(saveCsrfToken)
+        .check(saveNino)
+    } else {
+      http("GET the start of the NINO access page")
+        .get(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(200)
+        )
+        .check(saveCsrfToken)
+        .check(saveNino)
+    }
+
+  def postContinueNinoAccess: ActionBuilder =
+    if (runLocal) {
+      http("POST continue NINO access page")
+        .post(
+          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("ninoAccessChoice", "${nino}")
+        .check(
+          status.is(303)
+        )
+    } else {
+      http("POST continue NINO access page")
+        .post(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(303)
         )
     }
-    else {
-      http("GET the start of the context journey")
-        .get("https://www.staging.tax.service.gov.uk" + s"$${initialiseStart}")
+
+  def getEnterNinoPage: ActionBuilder =
+    if (runLocal) {
+      http("GET enter NINO page")
+        .get(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
         .check(
-          status.is(303),
-          header("Location").saveAs("ninoWarmerRedirect")
+          status.is(200)
+        )
+    } else {
+      http("GET the start of the NINO access page")
+        .get(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(200)
         )
     }
-  }
 
-def getLinkRecord: ActionBuilder = http("GET link record for the test only nino access page")
-    .get(s"$acfFeUrl$${linkRecordRedirect}")
+  def postEnterNinoPage: ActionBuilder =
+    if (runLocal) {
+      http("POST enter NINO page")
+        .post(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("nino", "${nino}")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveNinoCheckUrl")
+        )
+    } else {
+      http("GET the start of the NINO access page")
+        .post(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveNinoCheckUrl")
+        )
+    }
+
+  def getNinoCheckPage: ActionBuilder =
+    if (runLocal) {
+      http("GET NINO check page")
+        .get(s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET NINO check page")
+        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .check(
+          status.is(200)
+        )
+    }
+
+  def postNinoCheckPage: ActionBuilder =
+    if (runLocal) {
+      http("POST NINO check page")
+        .post(s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("answer", "true")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveOneLogInSetupUrl")
+        )
+    } else {
+      http("POST NINO check page")
+        .post("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveOneLogInSetupUrl")
+        )
+    }
+
+  def getOneLoginSetUpPage: ActionBuilder =
+    if (runLocal) {
+      http("GET One log in set up page")
+        .get(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET One log in set up page")
+        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .check(
+          status.is(200)
+        )
+    }
+
+  def postOneLoginSetUpPage: ActionBuilder =
+    if (runLocal) {
+      http("POST One log in set up page")
+        .post(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303)
+        )
+    } else {
+      http("POST One log in set up page")
+        .post("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303)
+        )
+    }
+
+  def postEnrolmentStoreStubData: ActionBuilder = http("POST Enrolment store stub data")
+    .post(s"http://localhost:9595/enrolment-store-stub/data")
+    .body(StringBody("""{
+              |  "groupId": "${contextId}",
+              |  "affinityGroup": "Individual",
+              |  "users": [
+              |    {
+              |      "credId": "${caUserId}",
+              |      "name": "Default User",
+              |      "email": "66666666email@email.com",
+              |      "credentialRole": "Admin",
+              |      "description": "User Description"
+              |    }
+              |  ],
+              |  "enrolments": [
+              |    {
+              |      "serviceName": "IR-SA",
+              |      "identifiers": [
+              |        {
+              |          "key": "UTR",
+              |          "value": "123456"
+              |        }
+              |      ],
+              |      "enrolmentFriendlyName": "IR SA Enrolment",
+              |      "assignedUserCreds": [
+              |        "${caUserId}"
+              |      ],
+              |      "state": "Activated",
+              |      "enrolmentType": "principal",
+              |      "assignedToAll": false
+              |    },
+              |    {
+              |      "serviceName": "IR-SA",
+              |      "identifiers": [
+              |        {
+              |          "key": "UTR",
+              |          "value": "1234567891"
+              |        }
+              |      ],
+              |      "assignedUserCreds": [],
+              |      "state": "Activated",
+              |      "enrolmentType": "principal",
+              |      "assignedToAll": false
+              |    }
+              |  ]
+              |}""".stripMargin))
+    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
     .check(
-      status.is(303),
-      header("Location").saveAs("ninoAccessRedirect"),
-      currentLocationRegex("(.*)/account/link-records(.*)")
+      status.is(204)
     )
 
-  def getTestOnlyNinoAccessPage: ActionBuilder = http("GET test only nino access page")
-    .get(s"$acfFeUrl$${ninoAccessRedirect}")
-    .check(saveCsrfToken)
-    .check(
-      status.is(200),
-      currentLocationRegex("(.*)/account/test-only/nino-access?(.*)")
-    )
+  def getManageDetailsPageURL: ActionBuilder =
+    if (runLocal) {
+      http("GET Manage Details page")
+        .get(s"$camBeUrl/credential-management/manage-details")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET One log in set up page")
+        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .check(
+          status.is(200)
+        )
+    }
 
-  def postTestOnlyNinoAccessPage: ActionBuilder = http("POST test only nino access page")
-    .post(s"$acfFeUrl$${ninoAccessRedirect}")
-    .formParam("""csrfToken""", """${csrfToken}""")
-    .formParam("""ninoAccessChoice""", "custom")
-    .check(saveOlfgJourneyId)
-    .check(
-      status.is(303),
-      header("Location").saveAs("linkRecordRedirectforNinoWarmerPage"),
-      currentLocationRegex("(.*)/account/test-only/nino-access?(.*)")
-    )
-
-  def getNinoWarmerPage: ActionBuilder = http("GET nino warmer page")
-    .get(s"$acfFeUrl$${linkRecordRedirectforNinoWarmerPage}")
-    .check(
-      status.is(200),
-      saveCsrfToken,
-      saveJourneyId
-    )
-
-  def postNinoWarmerPage: ActionBuilder = http("POST nino warmer page")
-    .post(s"$acfFeUrl$${journeyId}")
-    .formParam("csrfToken", "${csrfToken}")
-    .formParam("answer", "true")
-    .formParam("submit", "submit")
-    .check(
-      status.is(303),
-      header("Location").saveAs("enterYourNinoPageRedirect")
-    )
-
-  def getEnterNinoPage: ActionBuilder = http("GET enter your nino page")
-    .get(s"$acfFeUrl$${enterYourNinoPageRedirect}")
-    .check(
-      status.is(200),
-      saveCsrfToken,
-      saveJourneyId,
-//      Location header doesn't exist'
-//            currentLocationRegex("(.*)sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=(.*)")
-    )
-
-  def postEnterNinoPage: ActionBuilder = http("POST enter your nino page")
-    .post(s"$acfFeUrl$${enterYourNinoPageRedirect}")
-    .formParam("csrfToken", "${csrfToken}")
-    .formParam("nino", "AA000003D")
-    .formParam("submit", "submit")
-    .check(
-      status.is(303),
-      header("Location").saveAs("ninoCheckRedirect")
-    )
-
-  def getNinoCheckPage: ActionBuilder = http("GET nino check page")
-    .get(s"$acfFeUrl$${ninoCheckRedirect}")
-    .check(
-      status.is(200)
-    )
-
-  def postNinoCheckPage: ActionBuilder = http("POST nino check page")
-    .post(s"$acfFeUrl$${ninoCheckRedirect}")
-    .formParam("csrfToken", "${csrfToken}")
-    .formParam("answer", "true")
-    .formParam("submit", "submit")
-    .check(
-      status.is(303),
-      header("Location").saveAs("OLsetupCompleteRedirect")
-    )
-
-  def getOneLoginSetup: ActionBuilder = http("GET GOV.UK One Login set up complete")
-    .get(s"$acfFeUrl$${OLsetupCompleteRedirect}")
-    .check(
-      status.is(200),
-      currentLocationRegex("(.*)/account/one-login-set-up(.*)")
-    )
-
-  def postOneLoginSetup: ActionBuilder = http("GET GOV.UK One Login set up complete")
-    .post(s"$acfFeUrl$${OLsetupCompleteRedirect}")
-    .formParam("csrfToken", "${csrfToken}")
-    .formParam("submit", "submit")
-    .check(
-      status.is(303),
-      header("Location").saveAs("stubPageRedirect")
-    )
-
-  def getCompletionUrl: ActionBuilder = http("GET completion url/auth login stub page")
-    .get(s"$${stubPageRedirect}")
-    .check(
-      status.is(200),
-      currentLocationRegex("(.*)/auth-login-stub/gg-sign-in")
-    )
-
-//  def postEnrolmentStoreStubData: ActionBuilder = exec(
-//  http("POST enrolment store stub data")
-//    .post("http://localhost:9595/enrolment-store-stub/data")
-//    .header("Content-Type", "application/json")
-//    .body(StringBody(
-//      """{
-//        |  "groupId": "${contextId}",
-//        |  "affinityGroup": "Individual",
-//        |  "users": [
-//        |    {
-//        |      "credId": "${caUserId}",
-//        |      "name": "Default User",
-//        |      "email": "66666666email@email.com",
-//        |      "credentialRole": "Admin",
-//        |      "description": "User Description"
-//        |    }
-//        |  ],
-//        |  "enrolments": [
-//        |    {
-//        |      "serviceName": "IR-SA",
-//        |      "identifiers": [
-//        |        {
-//        |          "key": "UTR",
-//        |          "value": "123456"
-//        |        }
-//        |      ],
-//        |      "enrolmentFriendlyName": "IR SA Enrolment",
-//        |      "assignedUserCreds": [
-//        |        "${caUserId}"
-//        |      ],
-//        |      "state": "Activated",
-//        |      "enrolmentType": "principal",
-//        |      "assignedToAll": false
-//        |    },
-//        |    {
-//        |      "serviceName": "IR-SA",
-//        |      "identifiers": [
-//        |        {
-//        |          "key": "UTR",
-//        |          "value": "1234567891"
-//        |        }
-//        |      ],
-//        |      "assignedUserCreds": [],
-//        |      "state": "Activated",
-//        |      "enrolmentType": "principal",
-//        |      "assignedToAll": false
-//        |    }
-//        |  ]
-//        |}""".stripMargin))
-//    .check(status.is(200))
-//)
 }

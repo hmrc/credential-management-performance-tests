@@ -18,7 +18,7 @@ package uk.gov.hmrc.perftests.credentialManagement
 
 import io.gatling.core.action.builder.ActionBuilder
 import uk.gov.hmrc.perftests.credentialManagement.requests.GNAPAuthRequests._
-import uk.gov.hmrc.perftests.credentialManagement.requests.{CmRequests, BaseRequests}
+import uk.gov.hmrc.perftests.credentialManagement.requests.{BaseRequests, CmRequests}
 
 object CmParts extends BaseRequests with CmRequests{
   import io.gatling.http.request.builder.HttpRequestBuilder._
@@ -42,20 +42,16 @@ object CmParts extends BaseRequests with CmRequests{
       toActionBuilder(getOneLoginSignInPage) :+
       // now head to the ACF (IV) journey
       postAcfInitialise :+
-      getStartContextJourney :+
-      getLinkRecord :+
-      getTestOnlyNinoAccessPage :+
-      postTestOnlyNinoAccessPage :+
-      getNinoWarmerPage :+
-      postNinoWarmerPage :+
+      getNinoAccess :+
+      postContinueNinoAccess :+
       getEnterNinoPage :+
-      postEnterNinoPage
-//      getNinoCheckPage :+
-//      postNinoCheckPage :+
-//      getOneLoginSetup :+
-//      postOneLoginSetup :+
-//      getCompletionUrl
-//      postEnrolmentStoreStubData
+      postEnterNinoPage :+
+      getNinoCheckPage :+
+      postNinoCheckPage :+
+      getOneLoginSetUpPage :+
+      postOneLoginSetUpPage :+
+      postEnrolmentStoreStubData :+
+      getManageDetailsPageURL
 
   }
 }

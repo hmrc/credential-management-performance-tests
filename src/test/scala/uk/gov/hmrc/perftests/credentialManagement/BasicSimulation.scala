@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.perftests.credentialManagement
+package uk.gov.hmrc.perftests.accountContextFixer
 
 import org.slf4j.{Logger, LoggerFactory}
 import sttp.client3._
 import sttp.model.Uri
 import uk.gov.hmrc.performance.simulation.PerformanceTestRunner
+import uk.gov.hmrc.perftests.credentialManagement.CmParts
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
 
 
