@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//Copyright 2024 HM Revenue & Customs
+
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
 import io.gatling.core.Predef._
@@ -26,21 +28,38 @@ trait CmRequests extends BaseRequests {
   // NOTE: browser cookies are managed by Gatling, along with state about the current location.
   // But headers must be provided on each call.
 
-  def postOneLoginAccountCreate: List[ActionBuilder] = exec(
+  def postOneLoginAccountCreate: Seq[ActionBuilder] = exec(
     http("Create account in IDP store")
       .post(s"$ctxUrl/identity-provider-account-context/accounts")
       .body(StringBody(s"""|
-          |{
-            |  "action": "create",
-            |  "identityProviderId": "$${randomIdentityProviderId}",
-            |  "identityProviderType": "ONE_LOGIN",
-            |  "email": "$${randomEmail}"
-            |}
-            |""".stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
+        {
+          "action": "create",
+          "identityProviderId": "$${randomIdentityProviderId}",
+          "identityProviderType": "ONE_LOGIN",
+          "email": "66666666email@email.com"
+        }
+        """.stripMargin))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
       .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
-  ).feed(feeder).actionBuilders
+  ).feed(feeder).actionBuilders.toSeq
+
+  def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
+    http("Update account in IDP store")
+      .post(s"$ctxUrl/identity-provider-account-context/accounts")
+      .body(StringBody(s"""|
+        {
+          "action": "update",
+          "caUserId": "649fcab9-0223-4c32-8fd1-47174156b756",
+          "dateOfBirth": "1948-04-23",
+          "firstName": "Jim",
+          "lastName": "Ferguson",
+          "confidenceLevel": 250
+        }
+        """.stripMargin))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
+      .check(status.is(200))
+  ).feed(feeder).actionBuilders.toSeq
 
   def getAccount: ActionBuilder = http("GET newly created account")
     .get(s"$ctxUrl/identity-provider-account-context/accounts?identityProviderId=$${randomIdentityProviderId}")
@@ -53,34 +72,79 @@ trait CmRequests extends BaseRequests {
     .post(s"$acfBeUrl/account-context-fixer/initialise")
     .body(StringBody("""|
          |{
-         | "action": "VERIFIED_CONTEXT",
-         | "completionUrl":"https://www.staging.tax.service.gov.uk/auth-login-stub/gg-sign-in",
-         | "initialiseParameters":
-         |   {
-         |      "caUserId": "${caUserId}",
-         |      "firstName": "Jim",
-         |      "lastName": "Ferguson",
-         |      "birthdate": "1948-04-23"
-         |   }
-         |}
-         |""".stripMargin))
+                        | "action": "VERIFIED_CONTEXT",
+                        | "completionUrl":"https://www.staging.tax.service.gov.uk/auth-login-stub/gg-sign-in",
+                        | "initialiseParameters":
+                        |   {
+                        |      "caUserId": "${caUserId}",
+                        |      "firstName": "Jim",
+                        |      "lastName": "Ferguson",
+                        |      "birthdate": "1948-04-23"
+                        |   }
+                        |}
+                        |""".stripMargin))
     .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
     .check(
       status.is(200),
       bodyString.transform(extractContextJourneyId).saveAs("contextJourneyId")
+//      jsonPath("$..startUrl").saveAs("initialiseStart")
     )
+
+//  def getAccountStart: ActionBuilder =
+//    if (runLocal) {
+//      http("GET the account start redirect page")
+//        .get(
+//          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?contextJourneyId=$${contextJourneyId}"
+//        )
+//        .check(
+//          status.is(303),
+//          header("Location").saveAs("saveLinkRecordUrl")
+//        )
+//
+//    } else {
+//      http("GET the start of the NINO access page")
+//        .get(
+//          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+//        )
+//        .check(
+//          status.is(200)
+//        )
+//    }
+//
+//  def getAccountLinkRecord: ActionBuilder =
+//    if (runLocal) {
+//      http("GET the account link record redirect")
+//        .get(
+//          s"$acfFeUrl$${saveLinkRecordUrl}"
+//        )
+//        .check(
+//          status.is(303),
+//          header("Location").saveAs("saveLinkRecord1Url")
+//        )
+//
+//    } else {
+//      http("GET the start of the NINO access page")
+//        .get(
+//          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+//        )
+//        .check(
+//          status.is(200)
+//        )
+//    }
 
   def getNinoAccess: ActionBuilder =
     if (runLocal) {
       http("GET the start of the NINO access page")
         .get(
-          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+            s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+//          s"$acfFeUrl$${saveLinkRecord1Url}"
         )
         .check(
           status.is(200)
         )
         .check(saveCsrfToken)
         .check(saveNino)
+
     } else {
       http("GET the start of the NINO access page")
         .get(
@@ -225,49 +289,49 @@ trait CmRequests extends BaseRequests {
   def postEnrolmentStoreStubData: ActionBuilder = http("POST Enrolment store stub data")
     .post(s"http://localhost:9595/enrolment-store-stub/data")
     .body(StringBody("""{
-              |  "groupId": "${contextId}",
-              |  "affinityGroup": "Individual",
-              |  "users": [
-              |    {
-              |      "credId": "${caUserId}",
-              |      "name": "Default User",
-              |      "email": "66666666email@email.com",
-              |      "credentialRole": "Admin",
-              |      "description": "User Description"
-              |    }
-              |  ],
-              |  "enrolments": [
-              |    {
-              |      "serviceName": "IR-SA",
-              |      "identifiers": [
-              |        {
-              |          "key": "UTR",
-              |          "value": "123456"
-              |        }
-              |      ],
-              |      "enrolmentFriendlyName": "IR SA Enrolment",
-              |      "assignedUserCreds": [
-              |        "${caUserId}"
-              |      ],
-              |      "state": "Activated",
-              |      "enrolmentType": "principal",
-              |      "assignedToAll": false
-              |    },
-              |    {
-              |      "serviceName": "IR-SA",
-              |      "identifiers": [
-              |        {
-              |          "key": "UTR",
-              |          "value": "1234567891"
-              |        }
-              |      ],
-              |      "assignedUserCreds": [],
-              |      "state": "Activated",
-              |      "enrolmentType": "principal",
-              |      "assignedToAll": false
-              |    }
-              |  ]
-              |}""".stripMargin))
+                       |  "groupId": "${contextId}",
+                       |  "affinityGroup": "Individual",
+                       |  "users": [
+                       |    {
+                       |      "credId": "${caUserId}",
+                       |      "name": "Default User",
+                       |      "email": "66666666email@email.com",
+                       |      "credentialRole": "Admin",
+                       |      "description": "User Description"
+                       |    }
+                       |  ],
+                       |  "enrolments": [
+                       |    {
+                       |      "serviceName": "IR-SA",
+                       |      "identifiers": [
+                       |        {
+                       |          "key": "UTR",
+                       |          "value": "123456"
+                       |        }
+                       |      ],
+                       |      "enrolmentFriendlyName": "IR SA Enrolment",
+                       |      "assignedUserCreds": [
+                       |        "${caUserId}"
+                       |      ],
+                       |      "state": "Activated",
+                       |      "enrolmentType": "principal",
+                       |      "assignedToAll": false
+                       |    },
+                       |    {
+                       |      "serviceName": "IR-SA",
+                       |      "identifiers": [
+                       |        {
+                       |          "key": "UTR",
+                       |          "value": "1234567891"
+                       |        }
+                       |      ],
+                       |      "assignedUserCreds": [],
+                       |      "state": "Activated",
+                       |      "enrolmentType": "principal",
+                       |      "assignedToAll": false
+                       |    }
+                       |  ]
+                       |}""".stripMargin))
     .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
     .check(
       status.is(204)
@@ -287,5 +351,22 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     }
+
+  def getGuidancePageURL: ActionBuilder =
+    if (runLocal) {
+      http("GET the Guidance page")
+        .get(s"$camBeUrl/credential-management/guidance")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET the Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"$camBeUrl/credential-management/guidance")
+        .check(
+          status.is(200)
+        )
+    }
+
+
 
 }
