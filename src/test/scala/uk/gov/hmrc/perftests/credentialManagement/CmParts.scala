@@ -27,7 +27,7 @@ object CmParts extends BaseRequests with CmRequests{
     postOneLoginAccountCreate ++
       postOneLoginAccountUpdate ++
       Seq(
-//        getAccount,
+        getAccount,
         toActionBuilder(navigateToOneLoginSignInPageNoToken),
         toActionBuilder(redirectToInteractPage),
         toActionBuilder(redirectToSignInMethodPage),
@@ -43,17 +43,17 @@ object CmParts extends BaseRequests with CmRequests{
         postAcfInitialise,
 //        getAccountStart
 //        getAccountLinkRecord
-        getNinoAccess
-//        postContinueNinoAccess,
-//        getEnterNinoPage,
-//        postEnterNinoPage,
-//        getNinoCheckPage,
-//        postNinoCheckPage,
-//        getOneLoginSetUpPage,
-//        postOneLoginSetUpPage,
-//        postEnrolmentStoreStubData,
-//        getManageDetailsPageURL,
-//        getGuidancePageURL
+        getNinoAccess,
+        postContinueNinoAccess,
+        getEnterNinoPage,
+        postEnterNinoPage,
+        getNinoCheckPage,
+        postNinoCheckPage,
+        getOneLoginSetUpPage,
+        postOneLoginSetUpPage,
+        postEnrolmentStoreStubData,
+        getManageDetailsPageURL,
+        getGuidancePageURL
       )
   }
 }

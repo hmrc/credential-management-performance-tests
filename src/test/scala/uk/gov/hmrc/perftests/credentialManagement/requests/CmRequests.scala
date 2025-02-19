@@ -42,7 +42,7 @@ trait CmRequests extends BaseRequests {
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
       .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
-  ).feed(feeder).actionBuilders.toSeq
+  ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
     http("Update account in IDP store")
@@ -59,7 +59,7 @@ trait CmRequests extends BaseRequests {
         """.stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
       .check(status.is(200))
-  ).feed(feeder).actionBuilders.toSeq
+  ).actionBuilders
 
   def getAccount: ActionBuilder = http("GET newly created account")
     .get(s"$ctxUrl/identity-provider-account-context/accounts?identityProviderId=$${randomIdentityProviderId}")
