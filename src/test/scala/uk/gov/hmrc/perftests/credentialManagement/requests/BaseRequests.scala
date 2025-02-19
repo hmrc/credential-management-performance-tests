@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,6 @@
 
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
-/*
- * Copyright 2023 HM Revenue & Customs
- *
- */
-
 import io.gatling.core.Predef._
 import io.gatling.core.check.CheckBuilder
 import io.gatling.core.check.css.CssCheckType
@@ -36,7 +31,7 @@ trait BaseRequests extends ServicesConfiguration {
   def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
 
 
-  val feeder = Iterator.continually {
+  val feeder: Iterator[Map[String, String]] = Iterator.continually {
     Map(
       "randomIdentityProviderId" -> s"perf_${Random.alphanumeric.take(30).mkString}",
       "randomEmail"          -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com"

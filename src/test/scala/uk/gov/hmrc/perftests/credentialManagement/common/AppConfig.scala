@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// Copyright 2025 HM Revenue & Customs
+
 
 package uk.gov.hmrc.perftests.credentialManagement.common
 
@@ -42,5 +45,8 @@ object AppConfig extends ServicesConfiguration {
 
   val camBeUrl: String = baseUrlFor("credential-management")
 
+  val ropcRegisterContinueUrl: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
+
+  val ropcRegisterCompleteUrl: String =s"$camBeUrl/credential-management/ropc-register-complete"
 }
 
