@@ -158,9 +158,7 @@ trait CmRequests extends BaseRequests {
   def postContinueNinoAccess: ActionBuilder =
     if (runLocal) {
       http("POST continue NINO access page")
-        .post(
-          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-        )
+        .post(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}")
         .formParam("""csrfToken""", """${csrfToken}""")
         .formParam("ninoAccessChoice", "${nino}")
         .check(
@@ -168,9 +166,9 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("POST continue NINO access page")
-        .post(
-          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-        )
+        .post("https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("ninoAccessChoice", "${nino}")
         .check(
           status.is(303)
         )
@@ -184,10 +182,8 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     } else {
-      http("GET the start of the NINO access page")
-        .get(
-          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-        )
+      http("GET enter NINO page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
         .check(
           status.is(200)
         )
@@ -206,9 +202,10 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET the start of the NINO access page")
-        .post(
-          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-        )
+        .post("https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("nino", "${nino}")
+        .formParam("submit", "submit")
         .check(
           status.is(303),
           header("Location").saveAs("saveNinoCheckUrl")
@@ -224,7 +221,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET NINO check page")
-        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .get("https://www.staging.tax.service.gov.uk" + s"$${saveNinoCheckUrl}")
         .check(
           status.is(200)
         )
@@ -243,7 +240,10 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("POST NINO check page")
-        .post("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveNinoCheckUrl}")
+        .post("https://www.staging.tax.service.gov.uk" + s"/$${saveNinoCheckUrl}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("answer", "true")
+        .formParam("submit", "submit")
         .check(
           status.is(303),
           header("Location").saveAs("saveOneLogInSetupUrl")
@@ -259,7 +259,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET One log in set up page")
-        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .get("https://www.staging.tax.service.gov.uk" + s"$${saveOneLogInSetupUrl}")
         .check(
           status.is(200)
         )
@@ -276,7 +276,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("POST One log in set up page")
-        .post("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+        .post("https://www.staging.tax.service.gov.uk" + s"/$${saveOneLogInSetupUrl}")
         .formParam("""csrfToken""", """${csrfToken}""")
         .formParam("submit", "submit")
         .check(
@@ -343,8 +343,8 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     } else {
-      http("GET One log in set up page")
-        .get("https://www.staging.tax.service.gov.uk" + s"$acfFeUrl/$${saveOneLogInSetupUrl}")
+      http("GET Manage Details page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/credential-management/manage-details")
         .check(
           status.is(200)
         )
@@ -359,12 +359,83 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET the Guidance page")
-        .get("https://www.staging.tax.service.gov.uk" + s"$camBeUrl/credential-management/guidance")
+        .get("https://www.staging.tax.service.gov.uk" + s"/credential-management/guidance")
         .check(
           status.is(200)
         )
     }
 
+  def getRopcRegisterContinueUrl: ActionBuilder =
+    if (runLocal) {
+      http("GET ropc-register Continue URL")
+        .get(s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET ropc-register Continue URL")
+        .get("https://www.staging.tax.service.gov.uk" + s"/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual")
+        .check(
+          status.is(200)
+        )
+    }
+
+  def postRopcRegisterUrl: ActionBuilder =
+    if (runLocal) {
+      http("POST ropc-register Url")
+        .post(s"$oneLoginStubUrl/ropc-register")
+        .formParam("redirectUrl", "http://localhost:12010/credential-management/ropc-register-complete")
+        .formParam("scpCredId", "123456")
+        .formParam("groupId", "${contextId}")
+        .formParam("email", "66666666email@email.com")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveRopcCompleteUrl")
+        )
+    } else {
+      http("POST ropc-register Url")
+        .post("https://www.staging.tax.service.gov.uk" + s"/ropc-register")
+        .formParam("redirectUrl", "http://localhost:12010/credential-management/ropc-register-complete")
+        .formParam("scpCredId", "123456")
+        .formParam("groupId", "${contextId}")
+        .formParam("email", "66666666email@email.com")
+        .formParam("submit", "submit")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveRopcCompleteUrl")
+        )
+    }
+
+  def getRopcRegisterCompleteUrl: ActionBuilder =
+    if (runLocal) {
+      http("GET ropc-register Complete URL")
+        .get(s"$${saveRopcCompleteUrl}")
+        .check(
+          status.is(303)
+        )
+    } else {
+      http("GET ropc-register Complete URL")
+        .get("https://www.staging.tax.service.gov.uk" + s"$${saveRopcCompleteUrl}")
+        .check(
+          status.is(303)
+        )
+    }
+
+  def getCmGuidancePageUrl: ActionBuilder =
+    if (runLocal) {
+      http("GET the Guidance page")
+        .get(s"$camBeUrl/credential-management/guidance")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET the Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/credential-management/guidance")
+        .check(
+          status.is(200)
+        )
+    }
 
 
 }

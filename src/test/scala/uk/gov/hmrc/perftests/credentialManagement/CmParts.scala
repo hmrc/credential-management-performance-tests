@@ -53,7 +53,11 @@ object CmParts extends BaseRequests with CmRequests{
         postOneLoginSetUpPage,
         postEnrolmentStoreStubData,
         getManageDetailsPageURL,
-        getGuidancePageURL
+        getGuidancePageURL,
+        getRopcRegisterContinueUrl,
+        postRopcRegisterUrl,
+        getRopcRegisterCompleteUrl,
+        getCmGuidancePageUrl
       )
   }
 }
