@@ -50,7 +50,7 @@ trait CmRequests extends BaseRequests {
       .body(StringBody(s"""|
         {
           "action": "update",
-          "caUserId": "649fcab9-0223-4c32-8fd1-47174156b756",
+          "caUserId": "$${caUserId}",
           "dateOfBirth": "1948-04-23",
           "firstName": "Jim",
           "lastName": "Ferguson",
@@ -90,47 +90,45 @@ trait CmRequests extends BaseRequests {
 //      jsonPath("$..startUrl").saveAs("initialiseStart")
     )
 
-//  def getAccountStart: ActionBuilder =
-//    if (runLocal) {
-//      http("GET the account start redirect page")
-//        .get(
-//          s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?contextJourneyId=$${contextJourneyId}"
-//        )
-//        .check(
-//          status.is(303),
-//          header("Location").saveAs("saveLinkRecordUrl")
-//        )
-//
-//    } else {
-//      http("GET the start of the NINO access page")
-//        .get(
-//          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-//        )
-//        .check(
-//          status.is(200)
-//        )
-//    }
-//
-//  def getAccountLinkRecord: ActionBuilder =
-//    if (runLocal) {
-//      http("GET the account link record redirect")
-//        .get(
-//          s"$acfFeUrl$${saveLinkRecordUrl}"
-//        )
-//        .check(
-//          status.is(303),
-//          header("Location").saveAs("saveLinkRecord1Url")
-//        )
-//
-//    } else {
-//      http("GET the start of the NINO access page")
-//        .get(
-//          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-//        )
-//        .check(
-//          status.is(200)
-//        )
-//    }
+  def getAccountStart: ActionBuilder =
+    if (runLocal) {
+      http("GET the account start redirect page")
+        .get(s"$${initialiseStart}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveLinkRecordUrl")
+        )
+
+    } else {
+      http("GET the start of the NINO access page")
+        .get(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(200)
+        )
+    }
+
+  def getAccountLinkRecord: ActionBuilder =
+    if (runLocal) {
+      http("GET the account link record redirect")
+        .get(
+          s"$acfFeUrl$${saveLinkRecordUrl}"
+        )
+        .check(
+          status.is(303),
+          header("Location").saveAs("saveLinkRecord1Url")
+        )
+
+    } else {
+      http("GET the start of the NINO access page")
+        .get(
+          "https://www.staging.tax.service.gov.uk" + s"/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
+        )
+        .check(
+          status.is(200)
+        )
+    }
 
   def getNinoAccess: ActionBuilder =
     if (runLocal) {

@@ -24,7 +24,7 @@ object CmParts extends BaseRequests with CmRequests{
   import io.gatling.http.request.builder.HttpRequestBuilder._
 
   def verifiedContextJourney(): Seq[ActionBuilder] = {
-//    postOneLoginAccountCreate ++
+    postOneLoginAccountCreate ++
       postOneLoginAccountUpdate ++
       Seq(
 //        getAccount,
@@ -40,10 +40,10 @@ object CmParts extends BaseRequests with CmRequests{
         toActionBuilder(redirectToLocationEndpoint),
         toActionBuilder(redirectToOneLoginSignInPage),
         toActionBuilder(getOneLoginSignInPage),
-//        postAcfInitialise,
+        postAcfInitialise,
 //        getAccountStart
 //        getAccountLinkRecord
-//        getNinoAccess,
+        getNinoAccess
 //        postContinueNinoAccess,
 //        getEnterNinoPage,
 //        postEnterNinoPage,
