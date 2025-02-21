@@ -43,7 +43,7 @@ object AppConfig extends ServicesConfiguration {
   val acfFeUrl: String = baseUrlFor("account-context-fixer-frontend")
   val acfBeUrl: String = baseUrlFor("account-context-fixer")
 
-  val camBeUrl: String = baseUrlFor("credential-management")
+  val camBeUrl: String = baseUrlFor("credential-management-frontend")
 
   val ropcRegisterContinueUrl: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
 
