@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Copyright 2025 HM Revenue & Customs
 
 package uk.gov.hmrc.perftests.credentialManagement.requests
@@ -232,56 +248,59 @@ trait CmRequests extends BaseRequests {
         )
     }
 
-  def postEnrolmentStoreStubData: ActionBuilder = http("POST Enrolment store stub data")
-    .post(s"http://localhost:9595/enrolment-store-stub/data")
-    .body(StringBody("""{
-                       |  "groupId": "${contextId}",
-                       |  "affinityGroup": "Individual",
-                       |  "users": [
-                       |    {
-                       |      "credId": "${caUserId}",
-                       |      "name": "Default User",
-                       |      "email": "66666666email@email.com",
-                       |      "credentialRole": "Admin",
-                       |      "description": "User Description"
-                       |    }
-                       |  ],
-                       |  "enrolments": [
-                       |    {
-                       |      "serviceName": "IR-SA",
-                       |      "identifiers": [
-                       |        {
-                       |          "key": "UTR",
-                       |          "value": "123456"
-                       |        }
-                       |      ],
-                       |      "enrolmentFriendlyName": "IR SA Enrolment",
-                       |      "assignedUserCreds": [
-                       |        "${caUserId}"
-                       |      ],
-                       |      "state": "Activated",
-                       |      "enrolmentType": "principal",
-                       |      "assignedToAll": false
-                       |    },
-                       |    {
-                       |      "serviceName": "IR-SA",
-                       |      "identifiers": [
-                       |        {
-                       |          "key": "UTR",
-                       |          "value": "1234567891"
-                       |        }
-                       |      ],
-                       |      "assignedUserCreds": [],
-                       |      "state": "Activated",
-                       |      "enrolmentType": "principal",
-                       |      "assignedToAll": false
-                       |    }
-                       |  ]
-                       |}""".stripMargin))
-    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
-    .check(
-      status.is(204)
-    )
+  def postEnrolmentStoreStubData: ActionBuilder =
+   http("POST Enrolment store stub data")
+  .post(s"$esStubDataUrl/enrolment-store-stub/data")
+      .body(StringBody(
+        """{
+          |  "groupId": "${contextId}",
+          |  "affinityGroup": "Individual",
+          |  "users": [
+          |    {
+          |      "credId": "${caUserId}",
+          |      "name": "Default User",
+          |      "email": "66666666email@email.com",
+          |      "credentialRole": "Admin",
+          |      "description": "User Description"
+          |    }
+          |  ],
+          |  "enrolments": [
+          |    {
+          |      "serviceName": "IR-SA",
+          |      "identifiers": [
+          |        {
+          |          "key": "UTR",
+          |          "value": "123456"
+          |        }
+          |      ],
+          |      "enrolmentFriendlyName": "IR SA Enrolment",
+          |      "assignedUserCreds": [
+          |        "${caUserId}"
+          |      ],
+          |      "state": "Activated",
+          |      "enrolmentType": "principal",
+          |      "assignedToAll": false
+          |    },
+          |    {
+          |      "serviceName": "IR-SA",
+          |      "identifiers": [
+          |        {
+          |          "key": "UTR",
+          |          "value": "1234567891"
+          |        }
+          |      ],
+          |      "assignedUserCreds": [],
+          |      "state": "Activated",
+          |      "enrolmentType": "principal",
+          |      "assignedToAll": false
+          |    }
+          |  ]
+          |}""".stripMargin))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
+      .check(
+        status.is(204)
+      )
+
 
   def getManageDetailsPageURL: ActionBuilder =
     if (runLocal) {
