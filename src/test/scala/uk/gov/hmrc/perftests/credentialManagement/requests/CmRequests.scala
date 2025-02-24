@@ -227,40 +227,6 @@ trait CmRequests extends BaseRequests {
         status.is(200)
       )
 
-//  def getRopcRegisterContinueUrl: ActionBuilder =
-//    http("GET ropc-register Continue URL")
-//      .get(s"$ropcRegisterContinueUrl")
-//      .check(
-//        status.is(200)
-//      )
-
-//  def postRopcRegisterUrl: ActionBuilder =
-//    http("POST ropc-register Url")
-//      .post(s"$oneLoginStubUrl/ropc-register")
-//      .formParam("redirectUrl", s"${{ropcRegisterCompleteUrl}}")
-//      .formParam("scpCredId", "123456")
-//      .formParam("groupId", "${contextId}")
-//      .formParam("email", "66666666email@email.com")
-//      .formParam("submit", "submit")
-//      .check(
-//        status.is(303),
-//        header("Location").saveAs("saveRopcCompleteUrl")
-//      )
-//
-//  def getRopcRegisterCompleteUrl: ActionBuilder =
-//    http("GET ropc-register Complete URL")
-//      .get(s"$${saveRopcCompleteUrl}")
-//      .check(
-//        status.is(303)
-//      )
-//
-//  def getCmGuidancePageUrl: ActionBuilder =
-//    http("GET the Guidance page")
-//      .get(s"$camBeUrl/credential-management/guidance")
-//      .check(
-//        status.is(200)
-//      )
-
   def getRopcRegisterContinueUrl: ActionBuilder =
     if (runLocal) {
       http("GET ropc-register Continue URL")
@@ -292,7 +258,10 @@ trait CmRequests extends BaseRequests {
     } else {
       http("POST ropc-register Url")
         .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/ropc-register")
-        .formParam("redirectUrl", "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete")
+        .formParam(
+          "redirectUrl",
+          "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
+        )
         .formParam("scpCredId", "123456")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
@@ -313,7 +282,6 @@ trait CmRequests extends BaseRequests {
     } else {
       http("GET ropc-register Complete URL")
         .get(s"www./$${saveOneLogInSetupUrl}")
-//        .get(s"$${saveRopcCompleteUrl}")
         .check(
           status.is(303)
         )
@@ -333,6 +301,5 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     }
-
 
 }
