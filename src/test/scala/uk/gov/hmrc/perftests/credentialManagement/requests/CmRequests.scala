@@ -270,7 +270,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET ropc-register Continue URL")
-        .get("https://www.staging.tax.service.gov.uk" + s"$ropRegisterContinueUrlStaging")
+        .get(s"$ropRegisterContinueUrlStaging")
         .check(
           status.is(200)
         )
@@ -291,7 +291,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("POST ropc-register Url")
-        .post("https://www.staging.tax.service.gov.uk" + s"/ropc-register")
+        .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/ropc-register")
         .formParam("redirectUrl", "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete")
         .formParam("scpCredId", "123456")
         .formParam("groupId", "${contextId}")
