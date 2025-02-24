@@ -246,7 +246,7 @@ trait CmRequests extends BaseRequests {
     if (runLocal) {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
-        .formParam("redirectUrl", "http://localhost:12010/credential-management/ropc-register-complete")
+        .formParam("redirectUrl", s"$camBeUrl/credential-management/ropc-register-complete")
         .formParam("scpCredId", "123456")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
