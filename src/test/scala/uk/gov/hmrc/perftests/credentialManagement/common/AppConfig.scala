@@ -45,7 +45,9 @@ object AppConfig extends ServicesConfiguration {
 
   val camBeUrl: String = baseUrlFor("credential-management-frontend")
 
-  val ropcRegisterContinueUrl: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
+  val ropcRegisterContinueUrlLocal: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
+
+  val ropRegisterContinueUrlStaging: String =s"$oneLoginStubUrl/ropc-register?continueUrl=https%3A%2F%2Fstaging.tax.service.gov.uk%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
 
   val ropcRegisterCompleteUrl: String =s"$camBeUrl/credential-management/ropc-register-complete"
 
