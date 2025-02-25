@@ -1,8 +1,8 @@
 #!/bin/sh -xe
 
-#sm2 --stop CREDENTIAL_MANAGEMENT_ALL
-#sleep 5
-#sm2 --start CREDENTIAL_MANAGEMENT_ALL --wait 60 --noprogress
+sm2 --stop CREDENTIAL_MANAGEMENT_ALL
+sleep 5
+sm2 --start CREDENTIAL_MANAGEMENT_ALL --wait 60 --noprogress
 
 
 
@@ -12,4 +12,4 @@ then
     exit 1
 fi
 
-sbt -DrunLocal=true -Dperftest.runSmokeTest=true -DjourneysToRun.0=acf-verified-context Gatling/test
+sbt -DrunLocal=true -Dperftest.runSmokeTest=true -DjourneysToRun.0=cm-ropcRegister-journey Gatling/test

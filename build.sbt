@@ -2,7 +2,7 @@ name := "credential-management-performance-tests"
 
 version := "0.1"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.13"
 
 enablePlugins(GatlingPlugin, SbtAutoBuildPlugin)
 
