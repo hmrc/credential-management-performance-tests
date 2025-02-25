@@ -282,7 +282,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET ropc-register Complete URL")
-        .get("https://www.staging.tax.service.gov.uk" + s"$${saveOneLogInSetupUrl}")
+        .get(s"$${saveRopcCompleteUrl}")
         .check(
           status.is(303)
         )
