@@ -275,13 +275,14 @@ trait CmRequests extends BaseRequests {
   def getRopcRegisterCompleteUrl: ActionBuilder =
     if (runLocal) {
       http("GET ropc-register Complete URL")
+//        .get(s"$camBeUrl/$${saveRopcCompleteUrl}")
         .get(s"$${saveRopcCompleteUrl}")
         .check(
           status.is(303)
         )
     } else {
       http("GET ropc-register Complete URL")
-        .get(s"www./$${saveOneLogInSetupUrl}")
+        .get(s"$${saveOneLogInSetupUrl}")
         .check(
           status.is(303)
         )
