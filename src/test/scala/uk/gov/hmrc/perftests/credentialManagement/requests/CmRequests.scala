@@ -281,8 +281,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET ropc-register Complete URL")
-//        .get(s"$${saveRopcCompleteUrl}")
-        .get(s"www./$${saveOneLogInSetupUrl}")
+        .get(s"$${saveRopcCompleteUrl}")
         .check(
           status.is(303)
         )
