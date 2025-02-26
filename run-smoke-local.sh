@@ -1,8 +1,8 @@
 #!/bin/sh -xe
 
-sm2 --stop CREDENTIAL_MANAGEMENT_ALL
-sleep 5
-sm2 --start CREDENTIAL_MANAGEMENT_ALL --wait 60 --noprogress
+#sm2 --stop CREDENTIAL_MANAGEMENT_ALL
+#sleep 5
+#sm2 --start CREDENTIAL_MANAGEMENT_ALL --wait 60 --noprogress
 
 
 

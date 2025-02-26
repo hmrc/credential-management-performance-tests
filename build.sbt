@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "io.gatling.highcharts" % "gatling-charts-highcharts" % gatlingVersion % "test",
   "uk.gov.hmrc" %% "performance-test-runner" % "6.1.0" % "test",
   "io.rest-assured" % "rest-assured" % "3.3.0" % "test",
-  "com.nimbusds"          % "nimbus-jose-jwt"           % "9.31"          % "test",
+  "com.nimbusds"          % "nimbus-jose-jwt"           % "9.34"          % "test",
   "com.softwaremill.sttp.client3" %% "core" % "3.9.4"
 )
 
