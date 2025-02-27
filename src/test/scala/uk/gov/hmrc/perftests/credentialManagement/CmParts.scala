@@ -22,10 +22,10 @@ import io.gatling.core.action.builder.ActionBuilder
 import uk.gov.hmrc.perftests.credentialManagement.requests.GNAPAuthRequests._
 import uk.gov.hmrc.perftests.credentialManagement.requests.{BaseRequests, CmRequests}
 
-object CmParts extends BaseRequests with CmRequests{
+object CmParts extends BaseRequests with CmRequests {
   import io.gatling.http.request.builder.HttpRequestBuilder._
 
-  def cmRopcRegisterJourney(): Seq[ActionBuilder] = {
+  def cmRopcRegisterJourney(): Seq[ActionBuilder] =
     postOneLoginAccountCreate ++
       postOneLoginAccountUpdate ++
       Seq(
@@ -59,5 +59,4 @@ object CmParts extends BaseRequests with CmRequests{
         getRopcRegisterCompleteUrl,
         getCmGuidancePageUrl
       )
-  }
 }

@@ -26,16 +26,20 @@ import scala.util.Random
 
 trait BaseRequests extends ServicesConfiguration {
 
-  def saveCsrfToken: CheckBuilder[CssCheckType, NodeSelector, String] = css("input[name='csrfToken']", "value").optional.saveAs("csrfToken")
-  def saveJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("form[method='POST']", "action".takeRight(36)).optional.saveAs("journeyId")
-  def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
-
+  def saveCsrfToken: CheckBuilder[CssCheckType, NodeSelector, String]      =
+    css("input[name='csrfToken']", "value").optional.saveAs("csrfToken")
+  def saveJourneyId: CheckBuilder[CssCheckType, NodeSelector, String]      =
+    css("form[method='POST']", "action".takeRight(36)).optional.saveAs("journeyId")
+  def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] =
+    css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
 
   val feeder: Iterator[Map[String, String]] = Iterator.continually {
     Map(
       "randomIdentityProviderId" -> s"perf_${Random.alphanumeric.take(30).mkString}",
-      "randomEmail"          -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com"
+      "randomEmail"              -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com"
     )
   }
+
+  val randomScpCredId: String = Random.between(100000L, 1000000L).toString
 
 }

@@ -247,7 +247,7 @@ trait CmRequests extends BaseRequests {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$camBeUrl/credential-management/ropc-register-complete")
-        .formParam("scpCredId", "123456")
+        .formParam("scpCredId", s"$randomScpCredId")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
         .formParam("submit", "submit")
@@ -262,7 +262,7 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId", "632594")
+        .formParam("scpCredId", s"$randomScpCredId")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
         .formParam("submit", "submit")
@@ -275,8 +275,7 @@ trait CmRequests extends BaseRequests {
   def getRopcRegisterCompleteUrl: ActionBuilder =
     if (runLocal) {
       http("GET ropc-register Complete URL")
-//        .post(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
-        .get(s"$camBeUrl$${saveRopcCompleteUrl}")
+        .get(s"$${saveRopcCompleteUrl}")
         .check(
           status.is(303)
         )

@@ -52,5 +52,7 @@ object AppConfig extends ServicesConfiguration {
   val ropcRegisterCompleteUrl: String =s"$camBeUrl/credential-management/ropc-register-complete"
 
   val esStubDataUrl: String = baseUrlFor("enrolment-store-stub")
+
+  val basStubUrl: String = baseUrlFor("bas-stubs")
 }
 
