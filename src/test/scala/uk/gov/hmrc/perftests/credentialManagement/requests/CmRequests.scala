@@ -262,7 +262,7 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId", "123456")
+        .formParam("scpCredId", "632594")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
         .formParam("submit", "submit")
