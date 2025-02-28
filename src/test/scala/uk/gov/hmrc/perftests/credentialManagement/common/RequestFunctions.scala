@@ -38,7 +38,6 @@ object RequestFunctions {
   val olfgContinueCodePattern: String = """code=([^"]+)&state="""
   val bearerPattern: String = """^GNAP.*?(Bearer .*?)$|^(Bearer .*?)GNAP.*?$|^(Bearer .*?)$"""
   val contextJourneyIdPattern: String = """contextJourneyId=([^"]+)"""
-  val ninoPattern = """id="ninoAccessChoice" value="([^"]+)""""
 
   def saveCsrfToken: CheckBuilder[RegexCheckType, String, String] = regex(
     _ => CsrfPattern
@@ -90,8 +89,5 @@ object RequestFunctions {
     val pattern = """contextJourneyId=([^"]+)""".r
     pattern.findFirstMatchIn(responseBody).map(_.group(1)).getOrElse("")
   }
-
-  def saveNino: CheckBuilder[RegexCheckType, String, String] = regex(ninoPattern).saveAs("nino")
-
 
 }

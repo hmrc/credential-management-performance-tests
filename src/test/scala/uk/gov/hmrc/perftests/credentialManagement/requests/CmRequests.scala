@@ -27,7 +27,7 @@ import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 trait CmRequests extends BaseRequests {
 
   def postOneLoginAccountCreate: Seq[ActionBuilder] = exec(
-    http("Create account in IDP store")
+    http("Create account in IPAC")
       .post(s"$ctxUrl/identity-provider-account-context/accounts")
       .body(StringBody(s"""|
         {
@@ -43,7 +43,7 @@ trait CmRequests extends BaseRequests {
   ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
-    http("Update account in IDP store")
+    http("Update account in IPAC")
       .post(s"$ctxUrl/identity-provider-account-context/accounts")
       .body(StringBody(s"""|
         {
@@ -93,10 +93,10 @@ trait CmRequests extends BaseRequests {
         s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
       )
       .check(
-        status.is(200)
+        status.is(200),
+        saveCsrfToken,
+        saveNino
       )
-      .check(saveCsrfToken)
-      .check(saveNino)
 
   def postContinueNinoAccess: ActionBuilder =
     http("POST continue NINO access page")
@@ -104,7 +104,7 @@ trait CmRequests extends BaseRequests {
         s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
       )
       .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("ninoAccessChoice", "${nino}")
+      .formParam("ninoAccessChoice", "${testOnlyNino}")
       .check(
         status.is(303)
       )
@@ -120,7 +120,7 @@ trait CmRequests extends BaseRequests {
     http("POST enter NINO page")
       .post(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
       .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("nino", "${nino}")
+      .formParam("nino", "${testOnlyNino}")
       .formParam("submit", "submit")
       .check(
         status.is(303),

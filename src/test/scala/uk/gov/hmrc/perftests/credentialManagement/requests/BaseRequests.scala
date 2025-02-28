@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// Copyright 2025 HM Revenue & Customs
+
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
 import io.gatling.core.Predef._
@@ -26,12 +28,10 @@ import scala.util.Random
 
 trait BaseRequests extends ServicesConfiguration {
 
-  def saveCsrfToken: CheckBuilder[CssCheckType, NodeSelector, String]      =
-    css("input[name='csrfToken']", "value").optional.saveAs("csrfToken")
-  def saveJourneyId: CheckBuilder[CssCheckType, NodeSelector, String]      =
-    css("form[method='POST']", "action".takeRight(36)).optional.saveAs("journeyId")
-  def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] =
-    css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
+  def saveCsrfToken: CheckBuilder[CssCheckType, NodeSelector, String]      = css("input[name='csrfToken']", "value").optional.saveAs("csrfToken")
+  def saveJourneyId: CheckBuilder[CssCheckType, NodeSelector, String]      = css("form[method='POST']", "action".takeRight(36)).optional.saveAs("journeyId")
+  def saveRetryJourneyId: CheckBuilder[CssCheckType, NodeSelector, String] = css("a[href*=link-records]", "href").optional.saveAs("retryJourneyId")
+  def saveNino: CheckBuilder[CssCheckType, NodeSelector, String]           = css("#ninoAccessChoice", "value").optional.saveAs("testOnlyNino")
 
   val feeder: Iterator[Map[String, String]] = Iterator.continually {
     Map(
