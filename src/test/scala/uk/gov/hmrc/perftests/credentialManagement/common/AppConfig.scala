@@ -37,22 +37,15 @@ object AppConfig extends ServicesConfiguration {
 
   private val oneLoginStubBaseUrl: String = baseUrlFor("one-login-stub")
   val oneLoginStubUrl: String = s"$oneLoginStubBaseUrl/one-login-stub"
-
-  val ctxUrl: String = baseUrlFor("identity-provider-account-context")
-
-  val acfFeUrl: String = baseUrlFor("account-context-fixer-frontend")
-  val acfBeUrl: String = baseUrlFor("account-context-fixer")
-
-  val camBeUrl: String = baseUrlFor("credential-management-frontend")
-
   val ropcRegisterContinueUrlLocal: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
-
   val ropRegisterContinueUrlStaging: String =s"$oneLoginStubUrl/ropc-register?continueUrl=https%3A%2F%2Fstaging.tax.service.gov.uk%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
 
-  val ropcRegisterCompleteUrl: String =s"$camBeUrl/credential-management/ropc-register-complete"
-
+  val ctxUrl: String = baseUrlFor("identity-provider-account-context")
+  val acfFeUrl: String = baseUrlFor("account-context-fixer-frontend")
+  val acfBeUrl: String = baseUrlFor("account-context-fixer")
   val esStubDataUrl: String = baseUrlFor("enrolment-store-stub")
-
   val basStubUrl: String = baseUrlFor("bas-stubs")
+  val cmUrl: String = baseUrlFor("credential-management-frontend")
+  val ropcRegisterCompleteUrl: String =s"$cmUrl/credential-management/ropc-register-complete"
 }
 

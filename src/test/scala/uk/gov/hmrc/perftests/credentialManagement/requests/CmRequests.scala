@@ -215,14 +215,14 @@ trait CmRequests extends BaseRequests {
 
   def getManageDetailsPageURL: ActionBuilder =
     http("GET Manage Details page")
-      .get(s"$camBeUrl/credential-management/manage-details")
+      .get(s"$cmUrl/credential-management/manage-details")
       .check(
         status.is(200)
       )
 
   def getGuidancePageURL: ActionBuilder =
     http("GET the Guidance page")
-      .get(s"$camBeUrl/credential-management/guidance")
+      .get(s"$cmUrl/credential-management/guidance")
       .check(
         status.is(200)
       )
@@ -246,7 +246,7 @@ trait CmRequests extends BaseRequests {
     if (runLocal) {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
-        .formParam("redirectUrl", s"$camBeUrl/credential-management/ropc-register-complete")
+        .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
         .formParam("scpCredId", s"$randomScpCredId")
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
@@ -290,7 +290,7 @@ trait CmRequests extends BaseRequests {
   def getCmGuidancePageUrl: ActionBuilder =
     if (runLocal) {
       http("GET the Guidance page")
-        .get(s"$camBeUrl/credential-management/guidance")
+        .get(s"$cmUrl/credential-management/guidance")
         .check(
           status.is(200)
         )
