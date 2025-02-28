@@ -40,6 +40,7 @@ trait CmRequests extends BaseRequests {
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
       .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
+      .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
   ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
@@ -169,7 +170,7 @@ trait CmRequests extends BaseRequests {
           |  "affinityGroup": "Individual",
           |  "users": [
           |    {
-          |      "credId": "${caUserId}",
+          |      "credId": "${eacdUserId}",
           |      "name": "Default User",
           |      "email": "66666666email@email.com",
           |      "credentialRole": "Admin",
@@ -187,7 +188,7 @@ trait CmRequests extends BaseRequests {
           |      ],
           |      "enrolmentFriendlyName": "IR SA Enrolment",
           |      "assignedUserCreds": [
-          |        "${caUserId}"
+          |        "${eacdUserId}"
           |      ],
           |      "state": "Activated",
           |      "enrolmentType": "principal",
