@@ -1,13 +1,24 @@
-lazy val root = (project in file("."))
-  .enablePlugins(GatlingPlugin)
-  .settings(
-    name := "credential-management-performance-tests",
-    version := "0.1.0-SNAPSHOT",
-    scalaVersion := "2.13.12",
-    //implicitConversions & postfixOps are Gatling recommended -language settings
-    scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:postfixOps"),
-    // Enabling sbt-auto-build plugin provides DefaultBuildSettings with default `testOptions` from `sbt-settings` plugin.
-    // These testOptions are not compatible with `sbt gatling:test`. So we have to override testOptions here.
-    Test / testOptions := Seq.empty,
-    libraryDependencies ++= Dependencies.test
-  )
+name := "credential-management-performance-tests"
+
+version := "0.1"
+
+scalaVersion := "2.13.13"
+
+enablePlugins(GatlingPlugin)
+
+val gatlingVersion: String = "3.6.1"
+
+libraryDependencies ++= Seq(
+  "uk.gov.hmrc"                   %% "performance-test-runner"  % "6.1.0"        % "test",
+  "com.nimbusds"                  % "nimbus-jose-jwt"           % "9.34"         % "test",
+  "com.softwaremill.sttp.client3" %% "core"                     % "3.9.4"
+)
+
+// Enabling sbtAutoBuildPlugin provides default `testOptions` from `sbt-settings` plugin.
+// These testOptions are not compatible with `sbt gatling:test`. So we have to override testOptions here.
+
+Test / testOptions := Seq.empty
+
+//-feature: surfaces warning when advanced features are used without being enabled.
+//-language:implicitConversions", "-language:postfixOps are recommended by Gatling
+scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:postfixOps")
