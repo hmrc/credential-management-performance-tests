@@ -35,13 +35,14 @@ trait CmRequests extends BaseRequests {
           "action": "create",
           "identityProviderId": "$${randomIdentityProviderId}",
           "identityProviderType": "ONE_LOGIN",
-          "email": "66666666email@email.com"
+          "email": "$${randomEmail}"
         }
         """.stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
       .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
       .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
+      .check(jsonPath("$..email").saveAs("email"))
   ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
@@ -173,7 +174,7 @@ trait CmRequests extends BaseRequests {
           |    {
           |      "credId": "${eacdUserId}",
           |      "name": "Default User",
-          |      "email": "66666666email@email.com",
+          |      "email": "${email}",
           |      "credentialRole": "Admin",
           |      "description": "User Description"
           |    }
@@ -244,6 +245,41 @@ trait CmRequests extends BaseRequests {
         )
     }
 
+  //var randomScpCredId: String = ""
+  //def randomNumberGenerator(): Unit = randomScpCredId = Random.between(100000L, 1000000L).toString
+  //
+  //def postRopcRegisterUrl: ActionBuilder = {
+  //  randomNumberGenerator()
+  //  if (runLocal) {
+  //    http("POST ropc-register Url")
+  //      .post(s"$oneLoginStubUrl/ropc-register")
+  //      .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
+  //      .formParam("scpCredId", randomScpCredId)
+  //      .formParam("groupId", "${contextId}")
+  //      .formParam("email", "${email}")
+  //      .formParam("submit", "submit")
+  //      .check(
+  //        status.is(303),
+  //        header("Location").saveAs("saveRopcCompleteUrl")
+  //      )
+  //  } else {
+  //    http("POST ropc-register Url")
+  //      .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/ropc-register")
+  //      .formParam(
+  //        "redirectUrl",
+  //        "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
+  //      )
+  //      .formParam("scpCredId", randomScpCredId)
+  //      .formParam("groupId", "${contextId}")
+  //      .formParam("email", "${email}")
+  //      .formParam("submit", "submit")
+  //      .check(
+  //        status.is(303),
+  //        header("Location").saveAs("saveRopcCompleteUrl")
+  //      )
+  //  }
+  //}
+
   var randomScpCredId: String = ""
   def randomNumberGenerator(): Unit = randomScpCredId = Random.between(100000L, 1000000L).toString
 
@@ -253,9 +289,9 @@ trait CmRequests extends BaseRequests {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
-        .formParam("scpCredId", randomScpCredId)
+        .formParam("scpCredId",  "${randomIdentityProviderId}")
         .formParam("groupId", "${contextId}")
-        .formParam("email", "66666666email@email.com")
+        .formParam("email", "${email}")
         .formParam("submit", "submit")
         .check(
           status.is(303),
@@ -268,9 +304,9 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId", randomScpCredId)
+        .formParam("scpCredId",  "${randomIdentityProviderId}")
         .formParam("groupId", "${contextId}")
-        .formParam("email", "66666666email@email.com")
+        .formParam("email", "${email}")
         .formParam("submit", "submit")
         .check(
           status.is(303),
