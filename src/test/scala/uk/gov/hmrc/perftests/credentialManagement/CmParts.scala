@@ -57,6 +57,7 @@ object CmParts extends BaseRequests with CmRequests {
         getRopcRegisterContinueUrl,
         postRopcRegisterUrl,
         getRopcRegisterCompleteUrl,
-        getCmGuidancePageUrl
+        getCmGuidancePageUrl,
+        postAcfDelete
       )
 }

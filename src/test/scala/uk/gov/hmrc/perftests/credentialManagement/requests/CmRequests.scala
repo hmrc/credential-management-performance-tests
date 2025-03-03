@@ -23,6 +23,7 @@ import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef.{header, _}
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
 import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
+import scala.util.Random
 
 trait CmRequests extends BaseRequests {
 
@@ -37,7 +38,7 @@ trait CmRequests extends BaseRequests {
           "email": "66666666email@email.com"
         }
         """.stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
       .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
       .check(jsonPath("$..contextId").saveAs("contextId"))
       .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
@@ -56,7 +57,7 @@ trait CmRequests extends BaseRequests {
           "confidenceLevel": 250
         }
         """.stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
       .check(status.is(200))
   ).actionBuilders
 
@@ -243,12 +244,16 @@ trait CmRequests extends BaseRequests {
         )
     }
 
-  def postRopcRegisterUrl: ActionBuilder =
+  var randomScpCredId: String = ""
+  def randomNumberGenerator(): Unit = randomScpCredId = Random.between(100000L, 1000000L).toString
+
+  def postRopcRegisterUrl: ActionBuilder = {
+    randomNumberGenerator()
     if (runLocal) {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
-        .formParam("scpCredId", s"$randomScpCredId")
+        .formParam("scpCredId", randomScpCredId)
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
         .formParam("submit", "submit")
@@ -263,7 +268,7 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId", s"$randomScpCredId")
+        .formParam("scpCredId", randomScpCredId)
         .formParam("groupId", "${contextId}")
         .formParam("email", "66666666email@email.com")
         .formParam("submit", "submit")
@@ -272,6 +277,7 @@ trait CmRequests extends BaseRequests {
           header("Location").saveAs("saveRopcCompleteUrl")
         )
     }
+  }
 
   def getRopcRegisterCompleteUrl: ActionBuilder =
     if (runLocal) {
@@ -302,5 +308,12 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     }
+
+  def postAcfDelete: ActionBuilder = http("POST Delete data")
+    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/${"$"}{testOnlyNino}")
+    .check(
+      status.is(200)
+    )
+
 
 }

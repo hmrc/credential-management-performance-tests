@@ -36,7 +36,7 @@ class BasicSimulation extends PerformanceTestRunner {
     // cannot use Gatling DSL in before or after blocks
     // must be plain Scala, so we use STTP to make the final HTTP delete call
 
-    Uri.parse(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/AA000003D") match {
+    Uri.parse(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/${"$"}{testOnlyNino}") match {
       case Left(error) => logger.error(s"Bad URL: $error")
       case Right(uri)  =>
         val response = basicRequest.post(uri).send(backend)
@@ -44,6 +44,7 @@ class BasicSimulation extends PerformanceTestRunner {
           logger.info("successfully deleted performance test data")
         } else {
           logger.error("unable to delete test data, delete endpoint returned: " + response.code)
+          logger.info(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/${"$"}{testOnlyNino}")
         }
     }
 

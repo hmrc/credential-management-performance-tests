@@ -40,6 +40,4 @@ trait BaseRequests extends ServicesConfiguration {
     )
   }
 
-  val randomScpCredId: String = Random.between(100000L, 1000000L).toString
-
 }
