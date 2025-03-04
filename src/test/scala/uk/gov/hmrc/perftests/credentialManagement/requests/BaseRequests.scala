@@ -37,7 +37,7 @@ trait BaseRequests extends ServicesConfiguration {
     Map(
       "randomIdentityProviderId" -> s"perf_${Random.alphanumeric.take(30).mkString}",
       "randomEmail"              -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com",
-      "randomScpCredId"          -> s"perfScp_${Random.alphanumeric.take(30).mkString}"
+      "randomScpCredId"          -> s"${Random.between(100000L, 1000000L).toString}"
     )
   }
 
