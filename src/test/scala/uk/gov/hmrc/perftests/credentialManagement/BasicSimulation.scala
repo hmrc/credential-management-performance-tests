@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Copyright 2025 HM Revenue & Customs
 
 package uk.gov.hmrc.perftests.credentialManagement
@@ -7,10 +23,6 @@ import sttp.client3._
 import uk.gov.hmrc.performance.simulation.PerformanceTestRunner
 
 class BasicSimulation extends PerformanceTestRunner {
-
-  private val logger: Logger = LoggerFactory.getLogger(classOf[BasicSimulation])
-
-  private val backend: SttpBackend[Identity, Any] = HttpClientSyncBackend()
 
   setup("cm-ropc-journey", "CredentialManagement and ROPC register").withActions(CmParts.cmRopcRegisterJourney(): _*)
 
