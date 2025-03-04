@@ -18,8 +18,6 @@
 
 package uk.gov.hmrc.perftests.credentialManagement
 
-import org.slf4j.{Logger, LoggerFactory}
-import sttp.client3._
 import uk.gov.hmrc.performance.simulation.PerformanceTestRunner
 
 class BasicSimulation extends PerformanceTestRunner {
