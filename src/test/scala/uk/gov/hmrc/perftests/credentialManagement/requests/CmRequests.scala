@@ -1,19 +1,3 @@
-/*
- * Copyright 2025 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 // Copyright 2025 HM Revenue & Customs
 
 package uk.gov.hmrc.perftests.credentialManagement.requests
@@ -23,14 +7,14 @@ import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef.{header, _}
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
 import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
-import scala.util.Random
 
 trait CmRequests extends BaseRequests {
 
-  def postOneLoginAccountCreate: Seq[ActionBuilder] = exec(
-    http("Create account in IPAC")
-      .post(s"$ctxUrl/identity-provider-account-context/accounts")
-      .body(StringBody(s"""|
+  def postOneLoginAccountCreate: Seq[ActionBuilder] =
+    exec(
+      http("Create account in IPAC")
+        .post(s"$ctxUrl/identity-provider-account-context/accounts")
+        .body(StringBody(s"""|
         {
           "action": "create",
           "identityProviderId": "$${randomIdentityProviderId}",
@@ -38,12 +22,12 @@ trait CmRequests extends BaseRequests {
           "email": "$${randomEmail}"
         }
         """.stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
-      .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
-      .check(jsonPath("$..contextId").saveAs("contextId"))
-      .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
-      .check(jsonPath("$..email").saveAs("email"))
-  ).feed(feeder).actionBuilders
+        .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
+        .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
+        .check(jsonPath("$..contextId").saveAs("contextId"))
+        .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
+        .check(jsonPath("$..email").saveAs("email"))
+    ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
     http("Update account in IPAC")
@@ -245,51 +229,12 @@ trait CmRequests extends BaseRequests {
         )
     }
 
-  //var randomScpCredId: String = ""
-  //def randomNumberGenerator(): Unit = randomScpCredId = Random.between(100000L, 1000000L).toString
-  //
-  //def postRopcRegisterUrl: ActionBuilder = {
-  //  randomNumberGenerator()
-  //  if (runLocal) {
-  //    http("POST ropc-register Url")
-  //      .post(s"$oneLoginStubUrl/ropc-register")
-  //      .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
-  //      .formParam("scpCredId", randomScpCredId)
-  //      .formParam("groupId", "${contextId}")
-  //      .formParam("email", "${email}")
-  //      .formParam("submit", "submit")
-  //      .check(
-  //        status.is(303),
-  //        header("Location").saveAs("saveRopcCompleteUrl")
-  //      )
-  //  } else {
-  //    http("POST ropc-register Url")
-  //      .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/ropc-register")
-  //      .formParam(
-  //        "redirectUrl",
-  //        "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
-  //      )
-  //      .formParam("scpCredId", randomScpCredId)
-  //      .formParam("groupId", "${contextId}")
-  //      .formParam("email", "${email}")
-  //      .formParam("submit", "submit")
-  //      .check(
-  //        status.is(303),
-  //        header("Location").saveAs("saveRopcCompleteUrl")
-  //      )
-  //  }
-  //}
-
-  var randomScpCredId: String = ""
-  def randomNumberGenerator(): Unit = randomScpCredId = Random.between(100000L, 1000000L).toString
-
-  def postRopcRegisterUrl: ActionBuilder = {
-    randomNumberGenerator()
+  def postRopcRegisterUrl: ActionBuilder =
     if (runLocal) {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
-        .formParam("scpCredId",  "${randomIdentityProviderId}")
+        .formParam("scpCredId", "${randomScpCredId}")
         .formParam("groupId", "${contextId}")
         .formParam("email", "${email}")
         .formParam("submit", "submit")
@@ -304,7 +249,7 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId",  "${randomIdentityProviderId}")
+        .formParam("scpCredId", "${randomScpCredId}")
         .formParam("groupId", "${contextId}")
         .formParam("email", "${email}")
         .formParam("submit", "submit")
@@ -313,7 +258,6 @@ trait CmRequests extends BaseRequests {
           header("Location").saveAs("saveRopcCompleteUrl")
         )
     }
-  }
 
   def getRopcRegisterCompleteUrl: ActionBuilder =
     if (runLocal) {
@@ -350,6 +294,5 @@ trait CmRequests extends BaseRequests {
     .check(
       status.is(200)
     )
-
 
 }

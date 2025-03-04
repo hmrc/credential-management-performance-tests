@@ -22,7 +22,6 @@ import org.slf4j.{Logger, LoggerFactory}
 import sttp.client3._
 import sttp.model.Uri
 import uk.gov.hmrc.performance.simulation.PerformanceTestRunner
-import uk.gov.hmrc.perftests.credentialManagement.CmParts.randomScpCredId
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
 
 class BasicSimulation extends PerformanceTestRunner {
@@ -48,7 +47,7 @@ class BasicSimulation extends PerformanceTestRunner {
         }
     }
 
-    Uri.parse(s"$basStubUrl/bas-stubs/account/$randomScpCredId") match {
+    Uri.parse(s"$basStubUrl/bas-stubs/account/$$randomScpCredId") match {
       case Left(error) => logger.error(s"Bad URL: $error")
       case Right(uri)  =>
         val response = basicRequest.delete(uri).send(backend)

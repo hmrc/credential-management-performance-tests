@@ -36,7 +36,8 @@ trait BaseRequests extends ServicesConfiguration {
   val feeder: Iterator[Map[String, String]] = Iterator.continually {
     Map(
       "randomIdentityProviderId" -> s"perf_${Random.alphanumeric.take(30).mkString}",
-      "randomEmail"              -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com"
+      "randomEmail"              -> s"perf_${Random.alphanumeric.take(30).mkString}@example.com",
+      "randomScpCredId"          -> s"perfScp_${Random.alphanumeric.take(30).mkString}"
     )
   }
 
