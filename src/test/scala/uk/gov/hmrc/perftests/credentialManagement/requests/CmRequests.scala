@@ -26,22 +26,24 @@ import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 trait CmRequests extends BaseRequests {
 
-  def postOneLoginAccountCreate: Seq[ActionBuilder] = exec(
-    http("Create account in IPAC")
-      .post(s"$ctxUrl/identity-provider-account-context/accounts")
-      .body(StringBody(s"""|
+  def postOneLoginAccountCreate: Seq[ActionBuilder] =
+    exec(
+      http("Create account in IPAC")
+        .post(s"$ctxUrl/identity-provider-account-context/accounts")
+        .body(StringBody(s"""|
         {
           "action": "create",
           "identityProviderId": "$${randomIdentityProviderId}",
           "identityProviderType": "ONE_LOGIN",
-          "email": "66666666email@email.com"
+          "email": "$${randomEmail}"
         }
         """.stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
-      .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
-      .check(jsonPath("$..contextId").saveAs("contextId"))
-      .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
-  ).feed(feeder).actionBuilders
+        .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
+        .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
+        .check(jsonPath("$..contextId").saveAs("contextId"))
+        .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
+        .check(jsonPath("$..email").saveAs("email"))
+    ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
     http("Update account in IPAC")
@@ -56,7 +58,7 @@ trait CmRequests extends BaseRequests {
           "confidenceLevel": 250
         }
         """.stripMargin))
-      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "identity-provider-gateway"))
+      .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
       .check(status.is(200))
   ).actionBuilders
 
@@ -172,7 +174,7 @@ trait CmRequests extends BaseRequests {
           |    {
           |      "credId": "${eacdUserId}",
           |      "name": "Default User",
-          |      "email": "66666666email@email.com",
+          |      "email": "${email}",
           |      "credentialRole": "Admin",
           |      "description": "User Description"
           |    }
@@ -248,9 +250,9 @@ trait CmRequests extends BaseRequests {
       http("POST ropc-register Url")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
-        .formParam("scpCredId", s"$randomScpCredId")
+        .formParam("scpCredId", "${randomScpCredId}")
         .formParam("groupId", "${contextId}")
-        .formParam("email", "66666666email@email.com")
+        .formParam("email", "${email}")
         .formParam("submit", "submit")
         .check(
           status.is(303),
@@ -263,9 +265,9 @@ trait CmRequests extends BaseRequests {
           "redirectUrl",
           "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
         )
-        .formParam("scpCredId", s"$randomScpCredId")
+        .formParam("scpCredId", "${randomScpCredId}")
         .formParam("groupId", "${contextId}")
-        .formParam("email", "66666666email@email.com")
+        .formParam("email", "${email}")
         .formParam("submit", "submit")
         .check(
           status.is(303),
@@ -302,5 +304,18 @@ trait CmRequests extends BaseRequests {
           status.is(200)
         )
     }
+
+// Data deletion requests
+  def postAcfDelete: ActionBuilder = http("POST Delete ACF data")
+    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/$${testOnlyNino}")
+    .check(
+      status.is(200)
+    )
+
+  def deleteBasStubAcc(): ActionBuilder = http("DELETE bas-stub Account data")
+    .delete(s"$basStubUrl/bas-stubs/account/$${randomScpCredId}")
+    .check(
+      status.is(204)
+    )
 
 }
