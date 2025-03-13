@@ -21,6 +21,7 @@ package uk.gov.hmrc.perftests.credentialManagement.requests
 import io.gatling.core.Predef._
 import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef.{header, _}
+import io.gatling.http.request.builder.HttpRequestBuilder
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
 import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
@@ -46,189 +47,349 @@ trait CmRequests extends BaseRequests {
     ).feed(feeder).actionBuilders
 
   def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
-    http("Update account in IPAC")
-      .post(s"$ctxUrl/identity-provider-account-context/accounts")
+    http("Assign NINO to the account in IPAC")
+      .post(s"$ctxUrl/identity-provider-account-context/contexts/individual")
       .body(StringBody(s"""|
         {
-          "action": "update",
           "caUserId": "$${caUserId}",
-          "dateOfBirth": "1948-04-23",
-          "firstName": "Jim",
-          "lastName": "Ferguson",
-          "confidenceLevel": 250
+          "nino": "$${randomNino}"
         }
         """.stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
-      .check(status.is(200))
+      .check(status.is(201))
   ).actionBuilders
-
-  def getAccount: ActionBuilder = http("GET newly created account")
-    .get(s"$ctxUrl/identity-provider-account-context/accounts?identityProviderId=$${randomIdentityProviderId}")
-    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
-    .check(
-      status.is(200)
-    )
-
-  def postAcfInitialise: ActionBuilder = http("POST initialise for a verified journey")
-    .post(s"$acfBeUrl/account-context-fixer/initialise")
-    .body(StringBody("""|
-         |{
-                        | "action": "VERIFIED_CONTEXT",
-                        | "completionUrl":"https://www.staging.tax.service.gov.uk/auth-login-stub/gg-sign-in",
-                        | "initialiseParameters":
-                        |   {
-                        |      "caUserId": "${caUserId}",
-                        |      "firstName": "Jim",
-                        |      "lastName": "Ferguson",
-                        |      "birthdate": "1948-04-23"
-                        |   }
-                        |}
-                        |""".stripMargin))
-    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
-    .check(
-      status.is(200),
-      bodyString.transform(extractContextJourneyId).saveAs("contextJourneyId")
-    )
-
-  def getNinoAccess: ActionBuilder =
-    http("GET the start of the NINO access page")
-      .get(
-        s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-      )
-      .check(
-        status.is(200),
-        saveCsrfToken,
-        saveNino
-      )
-
-  def postContinueNinoAccess: ActionBuilder =
-    http("POST continue NINO access page")
-      .post(
-        s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-      )
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("ninoAccessChoice", "${testOnlyNino}")
-      .check(
-        status.is(303)
-      )
-
-  def getEnterNinoPage: ActionBuilder =
-    http("GET enter NINO page")
-      .get(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
-      .check(
-        status.is(200)
-      )
-
-  def postEnterNinoPage: ActionBuilder =
-    http("POST enter NINO page")
-      .post(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("nino", "${testOnlyNino}")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303),
-        header("Location").saveAs("saveNinoCheckUrl")
-      )
-
-  def getNinoCheckPage: ActionBuilder =
-    http("GET NINO check page")
-      .get(s"$acfFeUrl/$${saveNinoCheckUrl}")
-      .check(
-        status.is(200)
-      )
-
-  def postNinoCheckPage: ActionBuilder =
-    http("POST NINO check page")
-      .post(s"$acfFeUrl/$${saveNinoCheckUrl}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("answer", "true")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303),
-        header("Location").saveAs("saveOneLogInSetupUrl")
-      )
-
-  def getOneLoginSetUpPage: ActionBuilder =
-    http("GET One log in set up page")
-      .get(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
-      .check(
-        status.is(200)
-      )
-
-  def postOneLoginSetUpPage: ActionBuilder =
-    http("POST One log in set up page")
-      .post(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303)
-      )
 
   def postEnrolmentStoreStubData: ActionBuilder =
     http("POST Enrolment store stub data")
       .post(s"$esStubDataUrl/enrolment-store-stub/data")
       .body(StringBody("""{
-          |  "groupId": "${contextId}",
-          |  "affinityGroup": "Individual",
-          |  "users": [
-          |    {
-          |      "credId": "${eacdUserId}",
-          |      "name": "Default User",
-          |      "email": "${email}",
-          |      "credentialRole": "Admin",
-          |      "description": "User Description"
-          |    }
-          |  ],
-          |  "enrolments": [
-          |    {
-          |      "serviceName": "IR-SA",
-          |      "identifiers": [
-          |        {
-          |          "key": "UTR",
-          |          "value": "123456"
-          |        }
-          |      ],
-          |      "enrolmentFriendlyName": "IR SA Enrolment",
-          |      "assignedUserCreds": [
-          |        "${eacdUserId}"
-          |      ],
-          |      "state": "Activated",
-          |      "enrolmentType": "principal",
-          |      "assignedToAll": false
-          |    },
-          |    {
-          |      "serviceName": "IR-SA",
-          |      "identifiers": [
-          |        {
-          |          "key": "UTR",
-          |          "value": "1234567891"
-          |        }
-          |      ],
-          |      "assignedUserCreds": [],
-          |      "state": "Activated",
-          |      "enrolmentType": "principal",
-          |      "assignedToAll": false
-          |    }
-          |  ]
-          |}""".stripMargin))
+                         |  "groupId": "${contextId}",
+                         |  "affinityGroup": "Individual",
+                         |  "users": [
+                         |    {
+                         |      "credId": "${eacdUserId}",
+                         |      "name": "Default User",
+                         |      "email": "${email}",
+                         |      "credentialRole": "Admin",
+                         |      "description": "User Description"
+                         |    }
+                         |  ],
+                         |  "enrolments": [
+                         |    {
+                         |      "serviceName": "IR-SA",
+                         |      "identifiers": [
+                         |        {
+                         |          "key": "UTR",
+                         |          "value": "123456"
+                         |        }
+                         |      ],
+                         |      "enrolmentFriendlyName": "IR SA Enrolment",
+                         |      "assignedUserCreds": [
+                         |        "${eacdUserId}"
+                         |      ],
+                         |      "state": "Activated",
+                         |      "enrolmentType": "principal",
+                         |      "assignedToAll": false
+                         |    },
+                         |    {
+                         |      "serviceName": "IR-SA",
+                         |      "identifiers": [
+                         |        {
+                         |          "key": "UTR",
+                         |          "value": "1234567891"
+                         |        }
+                         |      ],
+                         |      "assignedUserCreds": [],
+                         |      "state": "Activated",
+                         |      "enrolmentType": "principal",
+                         |      "assignedToAll": false
+                         |    }
+                         |  ]
+                         |}""".stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
       .check(
         status.is(204)
-      )
-
-  def getManageDetailsPageURL: ActionBuilder =
-    http("GET Manage Details page")
-      .get(s"$cmUrl/credential-management/manage-details")
-      .check(
-        status.is(200)
       )
 
   def getGuidancePageURL: ActionBuilder =
     http("GET the Guidance page")
       .get(s"$cmUrl/credential-management/guidance")
       .check(
+        status.is(303),
+        header("Location").saveAs("interactUrl")
+      )
+
+  def getInteractURL: ActionBuilder =
+    http("GET redirect to interact url")
+      .get("${interactUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("identitySignInUrl")
+      )
+
+  def getIdentitySignInURL: ActionBuilder =
+    http("GET Identity Sing-in url")
+      .get("${identitySignInUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("olfgJourneyIDUrl")
+      )
+
+  def getOlfgJourneyIdURL: ActionBuilder =
+    http("GET OLFG Journey ID url")
+      .get("${olfgJourneyIDUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("authorizeResponseUrl")
+      )
+
+  def getAuthorizeResponseURL: ActionBuilder =
+    http("GET Authorize Response url")
+      .get("${authorizeResponseUrl}")
+      .check(
+        status.is(200),
+            saveNonce,
+            saveState,
+            saveFormPostUrl,
+            saveSimplifiedJourneyUrl
+      )
+
+  def postOneLoginStubAuthnPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for AUTHN journey")
+    .post(s"$oneLoginStubBaseUrl/one-login-stub/authorize")
+    .formParam("state", "${state}")
+    .formParam("nonce", "${nonce}")
+    .formParam("vtr", "[\"Cl.Cm\"]")
+    .formParam("userInfo.success", s"$success")
+    .formParam("userInfo.sub", "${randomIdentityProviderId}")
+    .formParam("userInfo.email", "${email}")
+    .formParam("submit", "submit")
+    .check(status.is(303))
+    .check(header("Location").saveAs("continueUrl"))
+
+  def getAuthOneLogInContinueURL: ActionBuilder =
+    http("GET IV authorize continue url")
+      .get("${continueUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("authAuthorizeCompleteUrl")
+      )
+
+  def getAuthAuthorizeCompleteURL: ActionBuilder =
+    http("GET Auth Authorize Complete url")
+      .get("${authAuthorizeCompleteUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("authInteractUrl")
+      )
+
+  def getAuthInteractURL: ActionBuilder =
+    http("GET Auth Interact url")
+      .get("${authInteractUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("IvGuidanceHashUrl")
+      )
+
+  def getIvGuidanceHashURL: ActionBuilder =
+    http("GET IV Guidance Hash url")
+      .get("${IvGuidanceHashUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("guidancePageIVUrl")
+      )
+
+  def getGuidancePageIV: ActionBuilder =
+    http("GET the Guidance page")
+      .get(s"$cmUrl/$${guidancePageIVUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("guidancePageIvInteractUrl")
+      )
+
+  def getGuidancePageIvInteractURL: ActionBuilder =
+    http("GET Guidance PAge IV Interact url")
+      .get("${guidancePageIvInteractUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("identityAuthorizeVerificationUrl")
+      )
+
+  def getIdentityAuthorizeVerificationURL: ActionBuilder =
+    http("GET Identity Authorize Verification url")
+      .get("${identityAuthorizeVerificationUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("olfgUrl")
+      )
+
+  def getOlfgURL: ActionBuilder =
+    http("GET OLFG url")
+      .get("${olfgUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("olfgAthorizeResponseUrl")
+      )
+
+  def getOlfgAuthorizeResponseURL: ActionBuilder =
+    http("GET Authorize Response url")
+      .get("${olfgAthorizeResponseUrl}")
+      .check(
+        status.is(200),
+        saveNonce,
+        saveState,
+        saveFormPostUrl,
+        saveSimplifiedJourneyUrl
+      )
+
+  //def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
+  //  .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
+  //  .formParam("state", "${state}")
+  //  .formParam("nonce", "${nonce}")
+  //  .formParam("vtr", "[\"Cl.Cm.P2\"]")
+  //  .formParam("userInfo.success", s"$success")
+  //  .formParam("userInfo.sub",  "${randomIdentityProviderId}")
+  //  .formParam("userInfo.email", "${email}")
+  //  .formParam("userInfo.vc.cs.name[0].nameParts[0].type", "GivenName")
+  //  .formParam("userInfo.vc.cs.name[0].nameParts[0].value", "Jim")
+  //  .formParam("userInfo.vc.cs.name[0].nameParts[1].type", "FamilyName")
+  //  .formParam("userInfo.vc.cs.name[0].nameParts[1].value", "Ferguson")
+  //  .formParam("userInfo.vc.cs.birthDate[0].value", "1948-04-23")
+  //  .formParam("submit", "submit")
+  //  .check(status.is(303))
+  //  .check(header("Location").saveAs("oneLogInContinueUrl"))
+
+  def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
+    .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
+    .formParam("state", "${state}")
+    .formParam("nonce", "${nonce}")
+    .formParam("vtr", "[\"Cl.Cm.P2\"]")
+    .formParam("userInfo.success", s"$success")
+    .formParam("userInfo.sub",  "${randomIdentityProviderId}")
+    .formParam("userInfo.email", "${email}")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].value", "Jim")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].value", "Ferguson")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[0].value", "1948-04-23")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
+    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
+    .formParam("userInfo.failureReason", "")
+    .formParam("userInfo.otherFailureReason", "")
+    .formParam("userInfo.failureDescription", "")
+    .formParam("userInfo.returnCode", "")
+    .formParam("submit", "submit")
+    .check(status.is(303))
+    .check(header("Location").saveAs("oneLogInContinueUrl"))
+
+  //def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
+  //  .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
+  //  .formParam("state", "${state}")
+  //  .formParam("nonce", "${nonce}")
+  //  .formParam("vtr", "[\"Cl.Cm.P2\"]")
+  //  .formParam("userInfo.success", s"$success")
+  //  .formParam("userInfo.sub",  "${randomIdentityProviderId}")
+  //  .formParam("userInfo.email", "${email}")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "Jim")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "Ferguson")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
+  //  .formParam("userInfo.vc.cs.birthDate[0].value", "1948-04-23")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
+  //  .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
+  //  .formParam("userInfo.failureReason", "")
+  //  .formParam("userInfo.otherFailureReason", "")
+  //  .formParam("userInfo.failureDescription", "")
+  //  .formParam("userInfo.returnCode", "")
+  //  .formParam("submit", "submit")
+  //  .check(status.is(303))
+  //  .check(header("Location").saveAs("oneLogInContinueUrl"))
+
+
+  def getOneLogInContinueURL: ActionBuilder =
+    http("GET IV authorize continue url")
+      .get("${oneLogInContinueUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("ivAuthorizeCompleteUrl")
+      )
+
+  def getIvAuthorizeCompleteURL: ActionBuilder =
+    http("GET IV Authorize Complete url")
+      .get("${ivAuthorizeCompleteUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("ivInteractUrl")
+      )
+
+  def getIvInteractURL: ActionBuilder =
+    http("GET IV Interact url")
+      .get("${ivInteractUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("guidanceHashUrl")
+      )
+
+  def getGuidanceHashURL: ActionBuilder =
+    http("GET Guidance Hash url")
+      .get("${guidanceHashUrl}")
+      .check(
+        status.is(303),
+        header("Location").saveAs("guidancePageUrl")
+      )
+
+  def getGuidancePage: ActionBuilder =
+    http("GET the Guidance page")
+        .get(s"$cmUrl/$${guidancePageUrl}")
+      .check(
         status.is(200)
       )
+
+
+
+
+  //def getManageDetailsPageURL: ActionBuilder =
+  //  http("GET Manage Details page")
+  //    .get(s"$cmUrl/credential-management/manage-details")
+  //    .check(
+  //      status.is(200)
+  //    )
+
+
+
+
+
+
+
+
+
+  //def getGuidancePageURL1: ActionBuilder =
+  //  http("GET the Guidance page")
+  //    .get(s"$cmUrl/credential-management/guidance")
+  //    .check(
+  //      status.is(200)
+  //    )
 
   def getRopcRegisterContinueUrl: ActionBuilder =
     if (runLocal) {
@@ -307,7 +468,7 @@ trait CmRequests extends BaseRequests {
 
 // Data deletion requests
   def postAcfDelete: ActionBuilder = http("POST Delete ACF data")
-    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/$${testOnlyNino}")
+    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/$${randomNino}")
     .check(
       status.is(200)
     )
