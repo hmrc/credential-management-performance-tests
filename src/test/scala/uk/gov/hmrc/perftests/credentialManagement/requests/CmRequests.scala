@@ -23,7 +23,6 @@ import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef.{header, _}
 import io.gatling.http.request.builder.HttpRequestBuilder
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
-import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 trait CmRequests extends BaseRequests {
 
@@ -112,12 +111,21 @@ trait CmRequests extends BaseRequests {
       )
 
   def getGuidancePageURL: ActionBuilder =
-    http("GET the Guidance page")
-      .get(s"$cmUrl/credential-management/guidance")
-      .check(
-        status.is(303),
-        header("Location").saveAs("interactUrl")
-      )
+    if (runLocal) {
+      http("GET the Guidance page")
+        .get(s"$cmUrl/credential-management/guidance")
+        .check(
+          status.is(303),
+          header("Location").saveAs("interactUrl")
+        )
+    } else {
+      http("GET the Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/credential-management/guidance")
+        .check(
+          status.is(303),
+          header("Location").saveAs("interactUrl")
+        )
+    }
 
   def getInteractURL: ActionBuilder =
     http("GET redirect to interact url")
@@ -148,23 +156,38 @@ trait CmRequests extends BaseRequests {
       .get("${authorizeResponseUrl}")
       .check(
         status.is(200),
-            saveNonce,
-            saveState,
-            saveFormPostUrl,
-            saveSimplifiedJourneyUrl
+        saveNonce,
+        saveState,
+        saveFormPostUrl,
+        saveSimplifiedJourneyUrl
       )
 
-  def postOneLoginStubAuthnPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for AUTHN journey")
-    .post(s"$oneLoginStubBaseUrl/one-login-stub/authorize")
-    .formParam("state", "${state}")
-    .formParam("nonce", "${nonce}")
-    .formParam("vtr", "[\"Cl.Cm\"]")
-    .formParam("userInfo.success", s"$success")
-    .formParam("userInfo.sub", "${randomIdentityProviderId}")
-    .formParam("userInfo.email", "${email}")
-    .formParam("submit", "submit")
-    .check(status.is(303))
-    .check(header("Location").saveAs("continueUrl"))
+  def postOneLoginStubAuthnPage(success: Boolean): HttpRequestBuilder =
+    if (runLocal) {
+      http("POST authorize url/one login stub for AUTHN journey")
+        .post(s"$oneLoginStubBaseUrl/one-login-stub/authorize")
+        .formParam("state", "${state}")
+        .formParam("nonce", "${nonce}")
+        .formParam("vtr", "[\"Cl.Cm\"]")
+        .formParam("userInfo.success", s"$success")
+        .formParam("userInfo.sub", "${randomIdentityProviderId}")
+        .formParam("userInfo.email", "${email}")
+        .formParam("submit", "submit")
+        .check(status.is(303))
+        .check(header("Location").saveAs("continueUrl"))
+    } else {
+      http("POST authorize url/one login stub for AUTHN journey")
+        .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/authorize")
+        .formParam("state", "${state}")
+        .formParam("nonce", "${nonce}")
+        .formParam("vtr", "[\"Cl.Cm\"]")
+        .formParam("userInfo.success", s"$success")
+        .formParam("userInfo.sub", "${randomIdentityProviderId}")
+        .formParam("userInfo.email", "${email}")
+        .formParam("submit", "submit")
+        .check(status.is(303))
+        .check(header("Location").saveAs("continueUrl"))
+    }
 
   def getAuthOneLogInContinueURL: ActionBuilder =
     http("GET IV authorize continue url")
@@ -199,12 +222,21 @@ trait CmRequests extends BaseRequests {
       )
 
   def getGuidancePageIV: ActionBuilder =
-    http("GET the Guidance page")
-      .get(s"$cmUrl/$${guidancePageIVUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("guidancePageIvInteractUrl")
-      )
+    if (runLocal) {
+      http("GET the Guidance page")
+        .get(s"$cmUrl/$${guidancePageIVUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidancePageIvInteractUrl")
+        )
+    } else {
+      http("GET the Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${guidancePageIVUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidancePageIvInteractUrl")
+        )
+    }
 
   def getGuidancePageIvInteractURL: ActionBuilder =
     http("GET Guidance PAge IV Interact url")
@@ -241,91 +273,77 @@ trait CmRequests extends BaseRequests {
         saveSimplifiedJourneyUrl
       )
 
-  //def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
-  //  .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
-  //  .formParam("state", "${state}")
-  //  .formParam("nonce", "${nonce}")
-  //  .formParam("vtr", "[\"Cl.Cm.P2\"]")
-  //  .formParam("userInfo.success", s"$success")
-  //  .formParam("userInfo.sub",  "${randomIdentityProviderId}")
-  //  .formParam("userInfo.email", "${email}")
-  //  .formParam("userInfo.vc.cs.name[0].nameParts[0].type", "GivenName")
-  //  .formParam("userInfo.vc.cs.name[0].nameParts[0].value", "Jim")
-  //  .formParam("userInfo.vc.cs.name[0].nameParts[1].type", "FamilyName")
-  //  .formParam("userInfo.vc.cs.name[0].nameParts[1].value", "Ferguson")
-  //  .formParam("userInfo.vc.cs.birthDate[0].value", "1948-04-23")
-  //  .formParam("submit", "submit")
-  //  .check(status.is(303))
-  //  .check(header("Location").saveAs("oneLogInContinueUrl"))
+  def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder =
+    if (runLocal) {
+      http("POST authorize url/one login stub for IV journey")
+        .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
+        .formParam("state", "${state}")
+        .formParam("nonce", "${nonce}")
+        .formParam("vtr", "[\"Cl.Cm.P2\"]")
+        .formParam("userInfo.success", s"$success")
+        .formParam("userInfo.sub", "${randomIdentityProviderId}")
+        .formParam("userInfo.email", "${email}")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].value", "Jim")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].value", "Ferguson")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[0].value", "1948-04-23")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
+        .formParam("userInfo.failureReason", "")
+        .formParam("userInfo.otherFailureReason", "")
+        .formParam("userInfo.failureDescription", "")
+        .formParam("userInfo.returnCode", "")
+        .formParam("submit", "submit")
+        .check(status.is(303))
+        .check(header("Location").saveAs("oneLogInContinueUrl"))
+    } else {
+      http("POST authorize url/one login stub for IV journey")
+        .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/authorizeIv")
+        .formParam("state", "${state}")
+        .formParam("nonce", "${nonce}")
+        .formParam("vtr", "[\"Cl.Cm.P2\"]")
+        .formParam("userInfo.success", s"$success")
+        .formParam("userInfo.sub", "${randomIdentityProviderId}")
+        .formParam("userInfo.email", "${email}")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].value", "Jim")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].value", "Ferguson")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[0].value", "1948-04-23")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
+        .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
+        .formParam("userInfo.failureReason", "")
+        .formParam("userInfo.otherFailureReason", "")
+        .formParam("userInfo.failureDescription", "")
+        .formParam("userInfo.returnCode", "")
+        .formParam("submit", "submit")
+        .check(status.is(303))
+        .check(header("Location").saveAs("oneLogInContinueUrl"))
 
-  def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
-    .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
-    .formParam("state", "${state}")
-    .formParam("nonce", "${nonce}")
-    .formParam("vtr", "[\"Cl.Cm.P2\"]")
-    .formParam("userInfo.success", s"$success")
-    .formParam("userInfo.sub",  "${randomIdentityProviderId}")
-    .formParam("userInfo.email", "${email}")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].value", "Jim")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].value", "Ferguson")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[0].value", "1948-04-23")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
-    .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
-    .formParam("userInfo.failureReason", "")
-    .formParam("userInfo.otherFailureReason", "")
-    .formParam("userInfo.failureDescription", "")
-    .formParam("userInfo.returnCode", "")
-    .formParam("submit", "submit")
-    .check(status.is(303))
-    .check(header("Location").saveAs("oneLogInContinueUrl"))
-
-  //def postOneLoginStubIvPage(success: Boolean): HttpRequestBuilder = http("POST authorize url/one login stub for IV journey")
-  //  .post(s"$oneLoginStubBaseUrl/one-login-stub/authorizeIv")
-  //  .formParam("state", "${state}")
-  //  .formParam("nonce", "${nonce}")
-  //  .formParam("vtr", "[\"Cl.Cm.P2\"]")
-  //  .formParam("userInfo.success", s"$success")
-  //  .formParam("userInfo.sub",  "${randomIdentityProviderId}")
-  //  .formParam("userInfo.email", "${email}")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "GivenName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[0].type", "Jim")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "FamilyName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].nameParts[1].type", "Ferguson")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[0].validUntil", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].type", "GivenName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[2].value", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].type", "FamilyName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].nameParts[3].value", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[1].validUntil", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].type", "GivenName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[4].value", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].type", "FamilyName")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].nameParts[5].value", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.name[2].validUntil", "")
-  //  .formParam("userInfo.vc.cs.birthDate[0].value", "1948-04-23")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[1].value", "")
-  //  .formParam("userInfo.verifiableCredentials.credentialSubject.birthDate[2].value", "")
-  //  .formParam("userInfo.failureReason", "")
-  //  .formParam("userInfo.otherFailureReason", "")
-  //  .formParam("userInfo.failureDescription", "")
-  //  .formParam("userInfo.returnCode", "")
-  //  .formParam("submit", "submit")
-  //  .check(status.is(303))
-  //  .check(header("Location").saveAs("oneLogInContinueUrl"))
-
+    }
 
   def getOneLogInContinueURL: ActionBuilder =
     http("GET IV authorize continue url")
@@ -360,31 +378,28 @@ trait CmRequests extends BaseRequests {
       )
 
   def getGuidancePage: ActionBuilder =
-    http("GET the Guidance page")
+    if (runLocal) {
+      http("GET the Guidance page")
         .get(s"$cmUrl/$${guidancePageUrl}")
-      .check(
-        status.is(200)
-      )
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("GET the Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${guidancePageUrl}")
+        .check(
+          status.is(200)
+        )
+    }
 
-
-
-
-  //def getManageDetailsPageURL: ActionBuilder =
+  // def getManageDetailsPageURL: ActionBuilder =
   //  http("GET Manage Details page")
   //    .get(s"$cmUrl/credential-management/manage-details")
   //    .check(
   //      status.is(200)
   //    )
 
-
-
-
-
-
-
-
-
-  //def getGuidancePageURL1: ActionBuilder =
+  // def getGuidancePageURL1: ActionBuilder =
   //  http("GET the Guidance page")
   //    .get(s"$cmUrl/credential-management/guidance")
   //    .check(
