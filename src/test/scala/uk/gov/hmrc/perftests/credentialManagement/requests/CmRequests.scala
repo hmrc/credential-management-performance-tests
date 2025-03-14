@@ -220,12 +220,21 @@ trait CmRequests extends BaseRequests {
       )
 
   def getAuthAuthorizeCompleteURL: ActionBuilder =
-    http("GET Auth Authorize Complete url")
-      .get("${authAuthorizeCompleteUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("authInteractUrl")
-      )
+    if (runLocal) {
+      http("GET Auth Authorize Complete url")
+        .get("${authAuthorizeCompleteUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("authInteractUrl")
+        )
+    } else {
+      http("GET Auth Authorize Complete url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${authAuthorizeCompleteUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("authInteractUrl")
+        )
+    }
 
   def getAuthInteractURL: ActionBuilder =
     http("GET Auth Interact url")
