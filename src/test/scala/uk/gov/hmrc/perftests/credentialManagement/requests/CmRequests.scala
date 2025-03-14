@@ -162,22 +162,15 @@ trait CmRequests extends BaseRequests {
         )
     }
 
-  def getOlfgJourneyIdURL: ActionBuilder =
-    if(runLocal) {
-      http("GET OLFG Journey ID url")
+  def getOlfgJourneyIdURL: ActionBuilder = {
+     http("GET OLFG Journey ID url")
         .get("${olfgJourneyIDUrl}")
         .check(
           status.is(303),
           header("Location").saveAs("authorizeResponseUrl")
         )
-    } else {
-      http("GET OLFG Journey ID url")
-        .get("https://www.staging.tax.service.gov.uk" + "${olfgJourneyIDUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("authorizeResponseUrl")
-        )
-    }
+  }
+
 
   def getAuthorizeResponseURL: ActionBuilder =
     if(runLocal) {
