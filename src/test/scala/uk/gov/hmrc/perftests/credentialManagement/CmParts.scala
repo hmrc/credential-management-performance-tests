@@ -29,31 +29,53 @@ object CmParts extends BaseRequests with CmRequests {
     postOneLoginAccountCreate ++
       postOneLoginAccountUpdate ++
       Seq(
-        getAccount,
-        toActionBuilder(navigateToOneLoginSignInPageNoToken),
-        toActionBuilder(redirectToInteractPage),
-        toActionBuilder(redirectToSignInMethodPage),
-        toActionBuilder(postOneLoginSignInMethodPage),
-        toActionBuilder(getOneLoginGatewayInitialiseEndpoint),
-        toActionBuilder(redirectToOneLoginGatewayStubPage),
-        toActionBuilder(postOneLoginGatewayStubPage),
-        toActionBuilder(redirectToOneLoginGatewayContinueEndpoint),
-        toActionBuilder(navigateToCompleteFixerJourney),
-        toActionBuilder(redirectToLocationEndpoint),
-        toActionBuilder(redirectToOneLoginSignInPage),
-        toActionBuilder(getOneLoginSignInPage),
-        postAcfInitialise,
-        getNinoAccess,
-        postContinueNinoAccess,
-        getEnterNinoPage,
-        postEnterNinoPage,
-        getNinoCheckPage,
-        postNinoCheckPage,
-        getOneLoginSetUpPage,
-        postOneLoginSetUpPage,
         postEnrolmentStoreStubData,
-        getManageDetailsPageURL,
         getGuidancePageURL,
+        getInteractURL,
+        getIdentitySignInURL,
+        getOlfgJourneyIdURL,
+        getAuthorizeResponseURL,
+        postOneLoginStubAuthnPage(true),
+        getAuthOneLogInContinueURL,
+        getAuthAuthorizeCompleteURL,
+        getAuthInteractURL,
+        getIvGuidanceHashURL,
+        getGuidancePageIV,
+        getGuidancePageIvInteractURL,
+        getIdentityAuthorizeVerificationURL,
+        getOlfgURL,
+        getOlfgAuthorizeResponseURL,
+
+
+        postOneLoginStubIvPage(true),
+        getOneLogInContinueURL,
+        getIvAuthorizeCompleteURL,
+        getIvInteractURL,
+        getGuidanceHashURL,
+        getGuidancePage,
+
+
+        //toActionBuilder(navigateToOneLoginSignInPageNoToken),
+        //toActionBuilder(redirectToInteractPage),
+        //toActionBuilder(redirectToSignInMethodPage),
+        //toActionBuilder(postOneLoginSignInMethodPage),
+        //toActionBuilder(getOneLoginGatewayInitialiseEndpoint),
+        //toActionBuilder(redirectToOneLoginGatewayStubPage),
+        //toActionBuilder(postOneLoginGatewayStubPage),
+        //toActionBuilder(redirectToOneLoginGatewayContinueEndpoint),
+        //toActionBuilder(navigateToCompleteFixerJourney),
+        //toActionBuilder(redirectToLocationEndpoint),
+        //toActionBuilder(redirectToOneLoginSignInPage),
+        //toActionBuilder(getOneLoginSignInPage),
+
+
+        //getManageDetailsPageURL,
+
+
+
+        //getGuidancePageURL1
+
+
         getRopcRegisterContinueUrl,
         postRopcRegisterUrl,
         getRopcRegisterCompleteUrl,

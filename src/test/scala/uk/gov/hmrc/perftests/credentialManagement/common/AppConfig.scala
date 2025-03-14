@@ -32,10 +32,11 @@ object AppConfig extends ServicesConfiguration {
   private val identityProviderGatewayFrontendBaseUrl: String = baseUrlFor("identity-provider-gateway-frontend")
   val identityProviderGatewayFrontendUrl: String = s"$identityProviderGatewayFrontendBaseUrl"
 
+  val olgUrl: String = baseUrlFor("one-login-gateway")
   private val oneLoginGatewayFeBaseUrl: String = baseUrlFor("one-login-gateway-frontend")
   val oneLoginGatewayFeUrl: String = s"$oneLoginGatewayFeBaseUrl/sign-in-to-hmrc-online-services/one-login"
 
-  private val oneLoginStubBaseUrl: String = baseUrlFor("one-login-stub")
+  val oneLoginStubBaseUrl: String = baseUrlFor("one-login-stub")
   val oneLoginStubUrl: String = s"$oneLoginStubBaseUrl/one-login-stub"
   val ropcRegisterContinueUrlLocal: String =s"$oneLoginStubUrl/ropc-register?continueUrl=http%3A%2F%2Flocalhost%3A12010%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
   val ropRegisterContinueUrlStaging: String =s"$oneLoginStubUrl/ropc-register?continueUrl=https%3A%2F%2Fstaging.tax.service.gov.uk%2Fcredential-management%2Fropc-register-complete&origin=credential-management-frontend&accountType=individual"
