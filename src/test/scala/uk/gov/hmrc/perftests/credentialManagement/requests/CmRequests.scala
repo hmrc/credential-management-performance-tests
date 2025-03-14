@@ -172,9 +172,8 @@ trait CmRequests extends BaseRequests {
   }
 
 
-  def getAuthorizeResponseURL: ActionBuilder =
-    if(runLocal) {
-      http("GET Authorize Response url")
+  def getAuthorizeResponseURL: ActionBuilder = {
+   http("GET Authorize Response url")
         .get("${authorizeResponseUrl}")
         .check(
           status.is(200),
@@ -183,18 +182,7 @@ trait CmRequests extends BaseRequests {
           saveFormPostUrl,
           saveSimplifiedJourneyUrl
         )
-    } else {
-      http("GET Authorize Response url")
-        .get("https://www.staging.tax.service.gov.uk" + "${authorizeResponseUrl}")
-        .check(
-          status.is(200),
-          saveNonce,
-          saveState,
-          saveFormPostUrl,
-          saveSimplifiedJourneyUrl
-        )
-    }
-
+  }
 
   def postOneLoginStubAuthnPage(success: Boolean): HttpRequestBuilder =
     if (runLocal) {
