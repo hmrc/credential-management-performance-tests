@@ -146,31 +146,62 @@ trait CmRequests extends BaseRequests {
 
 
   def getIdentitySignInURL: ActionBuilder =
-    http("GET Identity Sing-in url")
-      .get("${identitySignInUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("olfgJourneyIDUrl")
-      )
+    if(runLocal) {
+      http("GET Identity Sing-in url")
+        .get("${identitySignInUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("olfgJourneyIDUrl")
+        )
+    } else {
+      http("GET Identity Sing-in url")
+        .get("https://www.staging.tax.service.gov.uk" + "${identitySignInUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("olfgJourneyIDUrl")
+        )
+    }
 
   def getOlfgJourneyIdURL: ActionBuilder =
-    http("GET OLFG Journey ID url")
-      .get("${olfgJourneyIDUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("authorizeResponseUrl")
-      )
+    if(runLocal) {
+      http("GET OLFG Journey ID url")
+        .get("${olfgJourneyIDUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("authorizeResponseUrl")
+        )
+    } else {
+      http("GET OLFG Journey ID url")
+        .get("https://www.staging.tax.service.gov.uk" + "${olfgJourneyIDUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("authorizeResponseUrl")
+        )
+    }
 
   def getAuthorizeResponseURL: ActionBuilder =
-    http("GET Authorize Response url")
-      .get("${authorizeResponseUrl}")
-      .check(
-        status.is(200),
-        saveNonce,
-        saveState,
-        saveFormPostUrl,
-        saveSimplifiedJourneyUrl
-      )
+    if(runLocal) {
+      http("GET Authorize Response url")
+        .get("${authorizeResponseUrl}")
+        .check(
+          status.is(200),
+          saveNonce,
+          saveState,
+          saveFormPostUrl,
+          saveSimplifiedJourneyUrl
+        )
+    } else {
+      http("GET Authorize Response url")
+        .get("https://www.staging.tax.service.gov.uk" + "${authorizeResponseUrl}")
+        .check(
+          status.is(200),
+          saveNonce,
+          saveState,
+          saveFormPostUrl,
+          saveSimplifiedJourneyUrl
+        )
+    }
+
 
   def postOneLoginStubAuthnPage(success: Boolean): HttpRequestBuilder =
     if (runLocal) {
