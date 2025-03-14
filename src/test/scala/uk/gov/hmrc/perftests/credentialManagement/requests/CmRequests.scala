@@ -128,12 +128,22 @@ trait CmRequests extends BaseRequests {
     }
 
   def getInteractURL: ActionBuilder =
-    http("GET redirect to interact url")
-      .get("${interactUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("identitySignInUrl")
-      )
+    if(runLocal) {
+      http("GET redirect to interact url")
+        .get("${interactUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("identitySignInUrl")
+        )
+    } else {
+      http("GET redirect to interact url")
+        .get("https://www.staging.tax.service.gov.uk" + "${interactUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("identitySignInUrl")
+        )
+    }
+
 
   def getIdentitySignInURL: ActionBuilder =
     http("GET Identity Sing-in url")
