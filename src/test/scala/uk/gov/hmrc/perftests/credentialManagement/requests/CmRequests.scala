@@ -237,12 +237,21 @@ trait CmRequests extends BaseRequests {
     }
 
   def getAuthInteractURL: ActionBuilder =
-    http("GET Auth Interact url")
-      .get("${authInteractUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("IvGuidanceHashUrl")
-      )
+    if (runLocal) {
+      http("GET Auth Interact url")
+        .get("${authInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("IvGuidanceHashUrl")
+        )
+    } else {
+      http("GET Auth Interact url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${authInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("IvGuidanceHashUrl")
+        )
+    }
 
   def getIvGuidanceHashURL: ActionBuilder =
     http("GET IV Guidance Hash url")
