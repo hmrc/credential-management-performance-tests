@@ -254,12 +254,21 @@ trait CmRequests extends BaseRequests {
     }
 
   def getIvGuidanceHashURL: ActionBuilder =
-    http("GET IV Guidance Hash url")
-      .get("${IvGuidanceHashUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("guidancePageIVUrl")
-      )
+    if (runLocal) {
+      http("GET IV Guidance Hash url")
+        .get("${IvGuidanceHashUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("IvGuidanceHashUrl")
+        )
+    } else {
+      http("c")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${IvGuidanceHashUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("IvGuidanceHashUrl")
+        )
+    }
 
   def getGuidancePageIV: ActionBuilder =
     if (runLocal) {
