@@ -288,20 +288,39 @@ trait CmRequests extends BaseRequests {
     }
 
   def getGuidancePageIvInteractURL: ActionBuilder =
-    http("GET Guidance PAge IV Interact url")
-      .get("${guidancePageIvInteractUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("identityAuthorizeVerificationUrl")
-      )
+    if (runLocal) {
+      http("GET Guidance PAge IV Interact url")
+        .get("${guidancePageIvInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("identityAuthorizeVerificationUrl")
+        )
+    } else {
+      http("GET Guidance PAge IV Interact url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${guidancePageIvInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("identityAuthorizeVerificationUrl")
+        )
+    }
 
   def getIdentityAuthorizeVerificationURL: ActionBuilder =
-    http("GET Identity Authorize Verification url")
-      .get("${identityAuthorizeVerificationUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("olfgUrl")
-      )
+    if (runLocal) {
+      http("GET Identity Authorize Verification url")
+        .get("${identityAuthorizeVerificationUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("olfgUrl")
+        )
+    } else {
+      http("GET Identity Authorize Verification url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${identityAuthorizeVerificationUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("olfgUrl")
+        )
+    }
+
 
   def getOlfgURL: ActionBuilder =
     http("GET OLFG url")
