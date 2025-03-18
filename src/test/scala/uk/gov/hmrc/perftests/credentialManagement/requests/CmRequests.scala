@@ -422,28 +422,56 @@ trait CmRequests extends BaseRequests {
       )
 
   def getIvAuthorizeCompleteURL: ActionBuilder =
-    http("GET IV Authorize Complete url")
-      .get("${ivAuthorizeCompleteUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("ivInteractUrl")
-      )
+    if (runLocal) {
+      http("GET IV Authorize Complete url")
+        .get("${ivAuthorizeCompleteUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("ivInteractUrl")
+        )
+    } else {
+      http("GET IV Authorize Complete url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${ivAuthorizeCompleteUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("ivInteractUrl")
+        )
+    }
 
   def getIvInteractURL: ActionBuilder =
-    http("GET IV Interact url")
-      .get("${ivInteractUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("guidanceHashUrl")
-      )
+    if (runLocal) {
+      http("GET IV Interact url")
+        .get("${ivInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidanceHashUrl")
+        )
+    } else {
+      http("GET IV Interact url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${ivInteractUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidanceHashUrl")
+        )
+    }
+
 
   def getGuidanceHashURL: ActionBuilder =
-    http("GET Guidance Hash url")
-      .get("${guidanceHashUrl}")
-      .check(
-        status.is(303),
-        header("Location").saveAs("guidancePageUrl")
-      )
+    if (runLocal) {
+      http("GET Guidance Hash url")
+        .get("${guidanceHashUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidancePageUrl")
+        )
+    } else {
+      http("GET Guidance Hash url")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${guidanceHashUrl}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("guidancePageUrl")
+        )
+    }
 
   def getGuidancePage: ActionBuilder =
     if (runLocal) {
