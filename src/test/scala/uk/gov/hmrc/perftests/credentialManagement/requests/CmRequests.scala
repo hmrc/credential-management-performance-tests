@@ -272,15 +272,15 @@ trait CmRequests extends BaseRequests {
 
   def getGuidancePageIV: ActionBuilder =
     if (runLocal) {
-      http("GET the Guidance page")
-        .get(s"$cmUrl/$${guidancePageIVUrl}")
+      http("GET the IV Guidance page")
+        .get(s"$cmUrl/$${IvGuidanceHashUrl}")
         .check(
           status.is(303),
           header("Location").saveAs("guidancePageIvInteractUrl")
         )
     } else {
-      http("GET the Guidance page")
-        .get("https://www.staging.tax.service.gov.uk" + s"/$${guidancePageIVUrl}")
+      http("GET the IV Guidance page")
+        .get("https://www.staging.tax.service.gov.uk" + s"/$${IvGuidanceHashUrl}")
         .check(
           status.is(303),
           header("Location").saveAs("guidancePageIvInteractUrl")
