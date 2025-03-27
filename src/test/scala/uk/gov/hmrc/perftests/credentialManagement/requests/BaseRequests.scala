@@ -40,7 +40,7 @@ trait BaseRequests extends ServicesConfiguration {
 
   val feeder: Iterator[Map[String, String]] = Iterator.continually {
     def generateRandomString: String = {
-      val firstAlphabet = "ABCEHJ"
+      val firstAlphabet = "ABCEHJK"
       val digits = "123456"
       val lastAlphabet = "D"
       val random = new Random
