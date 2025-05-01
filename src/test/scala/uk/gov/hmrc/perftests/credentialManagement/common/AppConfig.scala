@@ -24,16 +24,16 @@ import uk.gov.hmrc.performance.conf.ServicesConfiguration
 object AppConfig extends ServicesConfiguration {
 
   private val baseUrl: String = baseUrlFor("centralised-authorisation-canary-frontend")
-  val caCanaryFeServiceUrl: String = s"$baseUrl/centralised-authorisation-canary/"
+  val caCanaryFeServiceUrl: String = baseUrl
 
   private val authorisationServerFeBaseUrl: String = baseUrlFor("centralised-authorisation-server-frontend")
-  val authorisationServerFeUrl: String = authorisationServerFeBaseUrl + "/centralised-authorisation-server"
+  val authorisationServerFeUrl: String = authorisationServerFeBaseUrl
 
   private val identityProviderGatewayFrontendBaseUrl: String = baseUrlFor("identity-provider-gateway-frontend")
-  val identityProviderGatewayFrontendUrl: String = s"$identityProviderGatewayFrontendBaseUrl"
+  val identityProviderGatewayFrontendUrl: String = identityProviderGatewayFrontendBaseUrl
 
   private val oneLoginGatewayFeBaseUrl: String = baseUrlFor("one-login-gateway-frontend")
-  val oneLoginGatewayFeUrl: String = s"$oneLoginGatewayFeBaseUrl/sign-in-to-hmrc-online-services/one-login"
+  val oneLoginGatewayFeUrl: String = oneLoginGatewayFeBaseUrl
 
   private val oneLoginStubBaseUrl: String = baseUrlFor("one-login-stub")
   val oneLoginStubUrl: String = s"$oneLoginStubBaseUrl/one-login-stub"

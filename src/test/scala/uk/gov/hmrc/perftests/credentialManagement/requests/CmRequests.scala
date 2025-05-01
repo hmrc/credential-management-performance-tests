@@ -22,152 +22,183 @@ import io.gatling.core.Predef._
 import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef.{header, _}
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
-import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 trait CmRequests extends BaseRequests {
 
-  def postOneLoginAccountCreate: Seq[ActionBuilder] =
-    exec(
-      http("Create account in IPAC")
-        .post(s"$ctxUrl/identity-provider-account-context/accounts")
-        .body(StringBody(s"""|
-        {
-          "action": "create",
-          "identityProviderId": "$${randomIdentityProviderId}",
-          "identityProviderType": "ONE_LOGIN",
-          "email": "$${randomEmail}"
-        }
-        """.stripMargin))
-        .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
-        .check(status.is(201), jsonPath("$..caUserId").saveAs("caUserId"))
-        .check(jsonPath("$..contextId").saveAs("contextId"))
-        .check(jsonPath("$..eacdUserId").saveAs("eacdUserId"))
-        .check(jsonPath("$..email").saveAs("email"))
-    ).feed(feeder).actionBuilders
-
-  def postOneLoginAccountUpdate: Seq[ActionBuilder] = exec(
-    http("Update account in IPAC")
-      .post(s"$ctxUrl/identity-provider-account-context/accounts")
-      .body(StringBody(s"""|
-        {
-          "action": "update",
-          "caUserId": "$${caUserId}",
-          "dateOfBirth": "1948-04-23",
-          "firstName": "Jim",
-          "lastName": "Ferguson",
-          "confidenceLevel": 250
-        }
-        """.stripMargin))
+  def postOneLoginAccountCreate: List[ActionBuilder] = exec(
+    http("Create account in IDP store")
+      .post(s"$ctxUrl/identity-provider-account-context/accounts/create")
+      .body(StringBody(
+        s"""|
+         |{
+            |  "identityProviderId": "$${randomIdentityProviderId}",
+            |  "identityProviderType": "ONE_LOGIN",
+            |  "email": "$${randomEmail}"
+            |}
+            |""".stripMargin))
       .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "performance-tests"))
-      .check(status.is(200))
-  ).actionBuilders
+      .check(
+        status.is(201),
+        jsonPath("$..caUserId").saveAs("caUserId"),
+        jsonPath("$..contextId").saveAs("contextId"),
+        jsonPath("$..eacdUserId").saveAs("eacdUserId") ,
+        jsonPath("$..email").saveAs("email")
+      )
+  ).feed(feeder).actionBuilders
 
-  def getAccount: ActionBuilder = http("GET newly created account")
-    .get(s"$ctxUrl/identity-provider-account-context/accounts?identityProviderId=$${randomIdentityProviderId}")
-    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
+
+  def getAccountStartUrl: ActionBuilder =
+    if (runLocal) {
+      http("GET account start url")
+        .get("${acfStartUrl}")
+        .check(
+          status.is(303),
+          currentLocationRegex(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?(.*)"),
+          header("Location").saveAs("linkRecordsUrl")
+        )
+    } else {
+      http("GET account start url")
+        .get(s"$acfFeUrl$${acfStartUrl}")
+        .check(
+          status.is(303),
+          currentLocationRegex(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?(.*)"),
+          header("Location").saveAs("linkRecordsUrl")
+        )
+    }
+
+  def getAccountLinkRecordsUrl: ActionBuilder = http("GET account link records url")
+    .get(s"$acfFeUrl$${linkRecordsUrl}")
     .check(
-      status.is(200)
+      status.is(303),
+      header("Location").saveAs("testOnlyNinoUrl")
     )
 
-  def postAcfInitialise: ActionBuilder = http("POST initialise for a verified journey")
-    .post(s"$acfBeUrl/account-context-fixer/initialise")
-    .body(StringBody("""|
-         |{
-                        | "action": "VERIFIED_CONTEXT",
-                        | "completionUrl":"https://www.staging.tax.service.gov.uk/auth-login-stub/gg-sign-in",
-                        | "initialiseParameters":
-                        |   {
-                        |      "caUserId": "${caUserId}",
-                        |      "firstName": "Jim",
-                        |      "lastName": "Ferguson",
-                        |      "birthdate": "1948-04-23"
-                        |   }
-                        |}
-                        |""".stripMargin))
-    .headers(Map("Content-Type" -> "application/json", "User-Agent" -> "centralised-authorisation-server"))
+  def getTestOnlyNinoPage: ActionBuilder = http("GET Test only nino access page")
+    .get(s"$acfFeUrl$${testOnlyNinoUrl}")
     .check(
       status.is(200),
-      bodyString.transform(extractContextJourneyId).saveAs("contextJourneyId")
+      saveCsrfToken,
+      saveNino
     )
 
-  def getNinoAccess: ActionBuilder =
-    http("GET the start of the NINO access page")
-      .get(
-        s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-      )
-      .check(
-        status.is(200),
-        saveCsrfToken,
-        saveNino
-      )
+  def postTestOnlyNinoPage: ActionBuilder = http("POST Test only nino access page")
+    .post(s"$acfFeUrl$${testOnlyNinoUrl}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("ninoAccessChoice", "${testOnlyNino}")
+    .check(
+      status.is(303),
+      header("Location").saveAs("enterNinoPage")
+    )
 
-  def postContinueNinoAccess: ActionBuilder =
-    http("POST continue NINO access page")
-      .post(
-        s"$acfFeUrl/sign-in-to-hmrc-online-services/account/test-only/nino-access?contextJourneyId=$${contextJourneyId}"
-      )
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("ninoAccessChoice", "${testOnlyNino}")
-      .check(
-        status.is(303)
-      )
+  def postTestOnlyNinoPageForPostcode: ActionBuilder = http("POST Test only nino access page for postcode")
+    .post(s"$acfFeUrl$${testOnlyNinoUrl}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("ninoAccessChoice", "custom")
+    .check(
+      status.is(303),
+      header("Location").saveAs("testOnlyNinoCustomRedirect")
+    )
 
-  def getEnterNinoPage: ActionBuilder =
-    http("GET enter NINO page")
-      .get(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
-      .check(
-        status.is(200)
-      )
+  def getNinoWarmerPage: ActionBuilder = http("GET Nino Warmer Page")
+    .get(s"$acfFeUrl$${testOnlyNinoCustomRedirect}")
+    .check(
+      status.is(200),
+      saveCsrfToken,
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/link-records?(.*)")
+    )
 
-  def postEnterNinoPage: ActionBuilder =
-    http("POST enter NINO page")
-      .post(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/enter-nino?contextJourneyId=$${contextJourneyId}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("nino", "${testOnlyNino}")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303),
-        header("Location").saveAs("saveNinoCheckUrl")
-      )
+  def postNinoWarmerPage: ActionBuilder = http("POST nino warmer page")
+    .post(s"$acfFeUrl$${testOnlyNinoCustomRedirect}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("answer", "false")
+    .formParam("submit", "submit")
+    .check(
+      status.is(303),
+      header("Location").saveAs("enterPostcodeRedirect")
+    )
 
-  def getNinoCheckPage: ActionBuilder =
-    http("GET NINO check page")
-      .get(s"$acfFeUrl/$${saveNinoCheckUrl}")
-      .check(
-        status.is(200)
-      )
+  def getEnterPostcodePage: ActionBuilder = http("GET enter your postcode page")
+    .get(s"$acfFeUrl$${enterPostcodeRedirect}")
+    .check(
+      status.is(200),
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/enter-postcode(.*)")
+    )
 
-  def postNinoCheckPage: ActionBuilder =
-    http("POST NINO check page")
-      .post(s"$acfFeUrl/$${saveNinoCheckUrl}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("answer", "true")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303),
-        header("Location").saveAs("saveOneLogInSetupUrl")
-      )
+  def postEnterPostcodePage: ActionBuilder = http("POST enter your postcode page")
+    .post(s"$acfFeUrl$${enterPostcodeRedirect}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("postcode", "SW1A 2AA")
+    .formParam("submit", "submit")
+    .check(
+      status.is(303),
+      header("Location").saveAs("incorrectDetailsRedirect")
+    )
 
-  def getOneLoginSetUpPage: ActionBuilder =
-    http("GET One log in set up page")
-      .get(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
-      .check(
-        status.is(200)
-      )
+  def getIncorrectDetailsPage: ActionBuilder = http("GET incorrect details page and goes to deskpro failure")
+    .get(s"$acfFeUrl$${incorrectDetailsRedirect}")
+    .check(
+      status.is(200),
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/unable-to-link-gov-uk-one-login(.*)")
+    )
 
-  def postOneLoginSetUpPage: ActionBuilder =
-    http("POST One log in set up page")
-      .post(s"$acfFeUrl/$${saveOneLogInSetupUrl}")
-      .formParam("""csrfToken""", """${csrfToken}""")
-      .formParam("submit", "submit")
-      .check(
-        status.is(303)
-      )
+  def getEnterNinoPage: ActionBuilder = http("GET enter your nino page")
+    .get(s"$acfFeUrl$${enterNinoPage}")
+    .check(
+      status.is(200),
+      saveCsrfToken,
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/enter-nino(.*)")
+    )
+
+  def postEnterNinoPage: ActionBuilder = http("POST enter your nino page")
+    .post(s"$acfFeUrl$${enterNinoPage}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("nino", "${testOnlyNino}")
+    .formParam("submit", "submit")
+    .check(
+      status.is(303),
+      header("Location").saveAs("ninoCheckRedirect")
+    )
+
+  def getNinoCheckPage: ActionBuilder = http("GET nino check page")
+    .get(s"$acfFeUrl$${ninoCheckRedirect}")
+    .check(
+      status.is(200),
+      saveCsrfToken,
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/nino-check(.*)")
+    )
+
+  def postNinoCheckPage: ActionBuilder = http("POST nino check page")
+    .post(s"$acfFeUrl$${ninoCheckRedirect}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("answer", "true")
+    .formParam("submit", "submit")
+    .check(
+      status.is(303),
+      header("Location").saveAs("oneLoginSetupCompleteRedirect")
+    )
+
+  def getOneLoginSetup: ActionBuilder = http("GET GOV.UK One Login set up complete")
+    .get(s"$acfFeUrl$${oneLoginSetupCompleteRedirect}")
+    .check(
+      status.is(200),
+      saveCsrfToken,
+      currentLocationRegex("(.*)/sign-in-to-hmrc-online-services/account/one-login-set-up(.*)")
+    )
+
+  def postOneLoginSetup: ActionBuilder = http("POST GOV.UK One Login set up complete")
+    .post(s"$acfFeUrl$${oneLoginSetupCompleteRedirect}")
+    .formParam("csrfToken", "${csrfToken}")
+    .formParam("submit", "submit")
+    .check(
+      status.is(303),
+      header("Location").saveAs("interactLocationUrl")
+    )
 
   def postEnrolmentStoreStubData: ActionBuilder =
     http("POST Enrolment store stub data")
       .post(s"$esStubDataUrl/enrolment-store-stub/data")
-      .body(StringBody("""{
+      .body(StringBody(
+        """{
           |  "groupId": "${contextId}",
           |  "affinityGroup": "Individual",
           |  "users": [
@@ -195,19 +226,6 @@ trait CmRequests extends BaseRequests {
           |      "state": "Activated",
           |      "enrolmentType": "principal",
           |      "assignedToAll": false
-          |    },
-          |    {
-          |      "serviceName": "IR-SA",
-          |      "identifiers": [
-          |        {
-          |          "key": "UTR",
-          |          "value": "1234567891"
-          |        }
-          |      ],
-          |      "assignedUserCreds": [],
-          |      "state": "Activated",
-          |      "enrolmentType": "principal",
-          |      "assignedToAll": false
           |    }
           |  ]
           |}""".stripMargin))
@@ -215,39 +233,47 @@ trait CmRequests extends BaseRequests {
       .check(
         status.is(204)
       )
-
-  def getManageDetailsPageURL: ActionBuilder =
-    http("GET Manage Details page")
-      .get(s"$cmUrl/credential-management/manage-details")
+  def getFinalCentralAuthCl200: ActionBuilder =
+    http("Get Central Auth CL200")
+      .get(s"$caCanaryFeServiceUrl/centralised-authorisation-canary/CL_200")
+      .check(currentLocationRegex("(.*)/centralised-authorisation-canary/CL_200"))
       .check(
         status.is(200)
       )
+  def getManageDetailsPage: ActionBuilder =
+    http("GET Manage Details page")
+      .get(s"$cmUrl/credential-management/manage-details")
+      .check(
+        status.is(200),
+        currentLocationRegex("(.*)/credential-management/manage-details")
+      )
 
-  def getGuidancePageURL: ActionBuilder =
-    http("GET the Guidance page")
+  def getGuidancePage: ActionBuilder =
+    http("GET Guidance page")
       .get(s"$cmUrl/credential-management/guidance")
       .check(
-        status.is(200)
+        status.is(200),
+        currentLocationRegex("(.*)/credential-management/guidance")
       )
 
   def getRopcRegisterContinueUrl: ActionBuilder =
     if (runLocal) {
-      http("GET ropc-register Continue URL")
+      http("GET ropc-register stub")
         .get(s"$ropcRegisterContinueUrlLocal")
         .check(
           status.is(200)
         )
     } else {
-      http("GET ropc-register Continue URL")
+      http("GET ropc-register stub")
         .get(s"$ropRegisterContinueUrlStaging")
         .check(
           status.is(200)
         )
     }
 
-  def postRopcRegisterUrl: ActionBuilder =
+  def postRopcRegisterContinueUrl: ActionBuilder =
     if (runLocal) {
-      http("POST ropc-register Url")
+      http("POST ropc-register stub")
         .post(s"$oneLoginStubUrl/ropc-register")
         .formParam("redirectUrl", s"$cmUrl/credential-management/ropc-register-complete")
         .formParam("scpCredId", "${randomScpCredId}")
@@ -256,66 +282,35 @@ trait CmRequests extends BaseRequests {
         .formParam("submit", "submit")
         .check(
           status.is(303),
-          header("Location").saveAs("saveRopcCompleteUrl")
+          header("Location").saveAs("ropcRegisterComplete")
         )
     } else {
-      http("POST ropc-register Url")
-        .post("https://www.staging.tax.service.gov.uk" + s"/one-login-stub/ropc-register")
-        .formParam(
-          "redirectUrl",
-          "https://www.staging.tax.service.gov.uk" + s"/credential-management/ropc-register-complete"
-        )
+      http("POST ropc register stub")
+        .post("https://www.staging.tax.service.gov.uk/one-login-stub/ropc-register")
+        .formParam("redirectUrl", "/credential-management/ropc-register-complete")
         .formParam("scpCredId", "${randomScpCredId}")
         .formParam("groupId", "${contextId}")
         .formParam("email", "${email}")
         .formParam("submit", "submit")
         .check(
           status.is(303),
-          header("Location").saveAs("saveRopcCompleteUrl")
+          header("Location").saveAs("ropcRegisterComplete")
         )
     }
 
   def getRopcRegisterCompleteUrl: ActionBuilder =
-    if (runLocal) {
-      http("GET ropc-register Complete URL")
-        .get(s"$${saveRopcCompleteUrl}")
+      http("GET ropc register complete")
+        .get("${ropcRegisterComplete}")
         .check(
-          status.is(303)
+          status.is(303),
+          header("Location").saveAs("ropCredentialCreated")
         )
-    } else {
-      http("GET ropc-register Complete URL")
-        .get(s"$${saveRopcCompleteUrl}")
-        .check(
-          status.is(303)
-        )
-    }
 
-  def getCmGuidancePageUrl: ActionBuilder =
-    if (runLocal) {
-      http("GET the Guidance page")
-        .get(s"$cmUrl/credential-management/guidance")
-        .check(
-          status.is(200)
-        )
-    } else {
-      http("GET the Guidance page")
-        .get("https://www.staging.tax.service.gov.uk" + s"/credential-management/guidance")
-        .check(
-          status.is(200)
-        )
-    }
-
-// Data deletion requests
-  def postAcfDelete: ActionBuilder = http("POST Delete ACF data")
-    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/$${testOnlyNino}")
-    .check(
-      status.is(200)
-    )
-
-  def deleteBasStubAcc(): ActionBuilder = http("DELETE bas-stub Account data")
-    .delete(s"$basStubUrl/bas-stubs/account/$${randomScpCredId}")
-    .check(
-      status.is(204)
-    )
-
+  def getRopcCredentialCreated: ActionBuilder =
+    http("GET ropc successfully linked GG cred page")
+      .get(s"$cmUrl$${ropCredentialCreated}")
+      .check(
+        status.is(200),
+        currentLocationRegex("(.*)/credential-management/govgateway-id-created")
+      )
 }
