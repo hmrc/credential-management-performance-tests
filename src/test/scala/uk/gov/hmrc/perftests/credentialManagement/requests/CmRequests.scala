@@ -299,12 +299,21 @@ trait CmRequests extends BaseRequests {
     }
 
   def getRopcRegisterCompleteUrl: ActionBuilder =
+    if (runLocal) {
       http("GET ropc register complete")
         .get("${ropcRegisterComplete}")
         .check(
           status.is(303),
           header("Location").saveAs("ropCredentialCreated")
         )
+    } else {
+      http("GET ropc register complete")
+        .get(s"$cmUrl$${ropcRegisterComplete}")
+        .check(
+          status.is(303),
+          header("Location").saveAs("ropCredentialCreated")
+        )
+    }
 
   def getRopcCredentialCreated: ActionBuilder =
     http("GET ropc successfully linked GG cred page")
