@@ -15,7 +15,7 @@
     <!-- Sets the performance-test-runner log level-->
     <logger name="uk.gov.hmrc.performance" level="WARN"/>
 
-    <root level="TRACE">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
 
