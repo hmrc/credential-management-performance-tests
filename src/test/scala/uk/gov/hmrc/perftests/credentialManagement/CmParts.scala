@@ -25,40 +25,64 @@ import uk.gov.hmrc.perftests.credentialManagement.requests.{BaseRequests, CmRequ
 object CmParts extends BaseRequests with CmRequests {
   import io.gatling.http.request.builder.HttpRequestBuilder._
 
-  def cmRopcRegisterJourney(): Seq[ActionBuilder] =
-    postOneLoginAccountCreate ++
-      postOneLoginAccountUpdate ++
-      Seq(
-        getAccount,
-        toActionBuilder(navigateToOneLoginSignInPageNoToken),
-        toActionBuilder(redirectToInteractPage),
-        toActionBuilder(redirectToSignInMethodPage),
-        toActionBuilder(postOneLoginSignInMethodPage),
-        toActionBuilder(getOneLoginGatewayInitialiseEndpoint),
-        toActionBuilder(redirectToOneLoginGatewayStubPage),
-        toActionBuilder(postOneLoginGatewayStubPage),
-        toActionBuilder(redirectToOneLoginGatewayContinueEndpoint),
-        toActionBuilder(navigateToCompleteFixerJourney),
-        toActionBuilder(redirectToLocationEndpoint),
-        toActionBuilder(redirectToOneLoginSignInPage),
-        toActionBuilder(getOneLoginSignInPage),
-        postAcfInitialise,
-        getNinoAccess,
-        postContinueNinoAccess,
-        getEnterNinoPage,
-        postEnterNinoPage,
-        getNinoCheckPage,
-        postNinoCheckPage,
-        getOneLoginSetUpPage,
-        postOneLoginSetUpPage,
-        postEnrolmentStoreStubData,
-        getManageDetailsPageURL,
-        getGuidancePageURL,
-        getRopcRegisterContinueUrl,
-        postRopcRegisterUrl,
-        getRopcRegisterCompleteUrl,
-        getCmGuidancePageUrl,
-        postAcfDelete,
-        deleteBasStubAcc()
-      )
+  def cmRopcRegisterJourney(): Seq[ActionBuilder] = {
+      // first create a (new) account with a random subject id
+      postOneLoginAccountCreate :+
+        // now log this user in (does this create the unverified context??)
+        toActionBuilder(navigateToOneLoginSignInPageNoToken) :+
+        toActionBuilder(redirectToInteractPage) :+
+        toActionBuilder(redirectToSignInMethodPage) :+
+        toActionBuilder(postOneLoginSignInMethodPage) :+
+        toActionBuilder(getOneLoginGatewayStartEndpoint) :+
+        toActionBuilder(redirectToOneLoginGatewayStubPage) :+
+        toActionBuilder(postOneLoginGatewayStubPage) :+
+        toActionBuilder(redirectToOneLoginGatewayContinueEndpoint) :+
+        toActionBuilder(navigateToCompleteFixerJourney) :+
+        toActionBuilder(redirectToLocationEndpoint) :+
+        toActionBuilder(redirectToCentralAuth) :+
+        toActionBuilder(getCentralAuthCl200) :+
+        toActionBuilder(redirectToIvInteractUrl) :+
+        toActionBuilder(getIdentityAuthorizeVerificationRedirect) :+
+        toActionBuilder(getIvStartUrl) :+
+        toActionBuilder(getIvAuthorizePage) :+
+        toActionBuilder(postIvAuthorizePage) :+
+        toActionBuilder(getIvContinueUrl) :+
+        toActionBuilder(getIvAuthorizeCompleteUrl) :+
+        toActionBuilder(redirectToLocationEndpoint) :+
+        toActionBuilder(redirectToCentralAuth) :+
+        toActionBuilder(getCentralAuthCl200) :+
+        toActionBuilder(redirectToIvInteractUrl) :+
+        toActionBuilder(redirectInteractUrlForFixerJourney) :+
+        // now head to the ACF (IV) journey
+        getAccountStartUrl :+
+        getAccountLinkRecordsUrl :+
+        getTestOnlyNinoPage :+
+        postTestOnlyNinoPageForPostcode :+
+        getNinoWarmerPage :+
+        postNinoWarmerPage :+
+        getEnterPostcodePage :+
+        postEnterPostcodePage :+
+        getIncorrectDetailsPage :+
+        getAccountLinkRecordsUrl :+
+        getTestOnlyNinoPage :+
+        postTestOnlyNinoPage :+
+        getEnterNinoPage :+
+        postEnterNinoPage :+
+        getNinoCheckPage :+
+        postNinoCheckPage :+
+        getOneLoginSetup :+
+        postOneLoginSetup :+
+        toActionBuilder(redirectToLocationEndpoint) :+
+        toActionBuilder(redirectToCentralAuth) :+
+        getFinalCentralAuthCl200 :+
+        postEnrolmentStoreStubData :+
+        getManageDetailsPage :+
+        getGuidancePage :+
+        getRopcRegisterContinueUrl :+
+        postRopcRegisterContinueUrl :+
+        getRopcRegisterCompleteUrl :+
+        getRopcCredentialCreated :+
+        getGuidancePage
+  }
 }
+
