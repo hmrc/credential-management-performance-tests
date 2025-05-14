@@ -27,41 +27,26 @@ import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 object GNAPAuthRequests {
 
-  val navigateToOneLoginSignInPageNoToken: HttpRequestBuilder =
+  val navigateToCentralAuth: HttpRequestBuilder =
     http("Navigate to one login journey")
       .get(s"$caCanaryFeServiceUrl/centralised-authorisation-canary/CL_200")
-      .check(currentLocationRegex("(.*)/CL_200"),
-        saveInteractRef,
+      .check(
+        currentLocationRegex("(.*)/CL_200"),
         status.is(303),
-        header("Location").saveAs("interactUrl")
+        header("Location").saveAs("signInPage")
       )
-
-  val redirectToInteractPage: HttpRequestBuilder =
-    if (runLocal) {
-      http("Redirect to Interact Url")
-        .get("${interactUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("interactRedirect"))
-    } else {
-      http("Redirect to Interact Url")
-        .get(s"$authorisationServerFeUrl$${interactUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("interactRedirect"))
-    }
 
   val redirectToSignInMethodPage: HttpRequestBuilder = {
     if (runLocal) {
       http("Redirect to Sign In Method page")
-        .get("${interactRedirect}")
+        .get("${signInPage}")
         .check(saveCsrfToken)
         .check(
           status.is(200)
         )
     } else {
       http("Redirect to Sign In Method page")
-        .get(s"$oneLoginGatewayFeUrl$${interactRedirect}")
+        .get(s"$oneLoginGatewayFeUrl$${signInPage}")
         .check(saveCsrfToken)
         .check(
           status.is(200)
@@ -72,7 +57,7 @@ object GNAPAuthRequests {
   val postOneLoginSignInMethodPage: HttpRequestBuilder =
     if (runLocal) {
       http("Post Sign In Method Page with One Login Selected")
-        .post("${interactRedirect}")
+        .post("${signInPage}")
         .formParam("""csrfToken""", """${csrfToken}""")
         .formParam("""signInType""", "oneLogin")
         .check(
@@ -81,7 +66,7 @@ object GNAPAuthRequests {
           header("Location").saveAs("authnStartUrl"))
     } else {
       http("Post Sign In Method Page with One Login Selected")
-        .post(s"$oneLoginGatewayFeUrl$${interactRedirect}")
+        .post(s"$oneLoginGatewayFeUrl$${signInPage}")
         .formParam("""csrfToken""", """${csrfToken}""")
         .formParam("""signInType""", "oneLogin")
         .check(
@@ -191,30 +176,13 @@ object GNAPAuthRequests {
       .check(currentLocationRegex("(.*)/centralised-authorisation-canary/CL_200"))
       .check(
         status.is(303),
-        header("Location").saveAs("iVInteractUrl")
+        header("Location").saveAs("cL200Redirect")
       )
-
-  val redirectToIvInteractUrl: HttpRequestBuilder =
-    if (runLocal) {
-      http("Redirect to IV interact url")
-        .get("${iVInteractUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("iVAuthorizeVerificationRedirect")
-        )
-    } else {
-      http("Redirect to IV interact url")
-        .get(s"$authorisationServerFeUrl$${iVInteractUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("iVAuthorizeVerificationRedirect")
-        )
-    }
 
   val getIdentityAuthorizeVerificationRedirect: HttpRequestBuilder =
     if (runLocal) {
       http("Redirect to One login authorize verification url")
-        .get("${iVAuthorizeVerificationRedirect}")
+        .get("${cL200Redirect}")
         .check(
           status.is(303),
           saveOlfgJourneyId,
@@ -222,7 +190,7 @@ object GNAPAuthRequests {
         )
     } else {
       http("Redirect to One login authorize verification url")
-        .get(s"$identityProviderGatewayFrontendUrl$${iVAuthorizeVerificationRedirect}")
+        .get(s"$identityProviderGatewayFrontendUrl$${cL200Redirect}")
         .check(
           status.is(303),
           saveOlfgJourneyId,
@@ -313,21 +281,6 @@ object GNAPAuthRequests {
           currentLocationRegex(s"$identityProviderGatewayFrontendUrl/sign-in-to-hmrc-online-services/identity/authorize/complete/(.*)"),
           header("Location").saveAs("interactLocationUrl")
         )
-    }
-
-  val redirectInteractUrlForFixerJourney: HttpRequestBuilder =
-    if (runLocal) {
-      http("Redirect to fixer journey")
-        .get("${iVInteractUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("acfStartUrl"))
-    } else {
-      http("Redirect to fixer journey")
-        .get(s"$authorisationServerFeUrl$${iVInteractUrl}")
-        .check(
-          status.is(303),
-          header("Location").saveAs("acfStartUrl"))
     }
 }
 

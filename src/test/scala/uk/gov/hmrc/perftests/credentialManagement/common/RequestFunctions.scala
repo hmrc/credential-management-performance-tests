@@ -30,26 +30,15 @@ import io.gatling.http.check.header.HttpHeaderRegexCheckType
 object RequestFunctions {
 
   val CsrfPattern = """<input type="hidden" name="csrfToken" value="([^"]+)""""
-  val interactRefPattern: String = """/interact/([^"]+)"""
-  val initialiseKeyPattern: String = """/sign-in-to-hmrc-online-services/identity/sign-in/([^"]+)"""
   val hashInteractRefPattern: String = """hash=([^"]+)"""
   val olfgJourneyIdPattern: String = """Id=([^"]+)"""
   val olfgSignedJWTPattern: String = """request=([^"]+)"""
   val olfgContinueCodePattern: String = """code=([^"]+)&state="""
-  val bearerPattern: String = """^GNAP.*?(Bearer .*?)$|^(Bearer .*?)GNAP.*?$|^(Bearer .*?)$"""
   val contextJourneyIdPattern: String = """contextJourneyId=([^"]+)"""
 
   def saveCsrfToken: CheckBuilder[RegexCheckType, String, String] = regex(
     _ => CsrfPattern
   ).saveAs("csrfToken")
-
-  def saveInteractRef: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
-    "Location", interactRefPattern
-  ).saveAs("interactRef")
-
-  def saveInitialiseKey: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
-    "Location", initialiseKeyPattern
-  ).saveAs("initialiseKey")
 
   def saveHashInteractRef: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
     "Location", hashInteractRefPattern
@@ -76,18 +65,5 @@ object RequestFunctions {
   def saveOlfgContinueCode: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
     "Location", olfgContinueCodePattern
   ).saveAs("olfgContinueCode")
-
-  def saveBearerToken: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
-    "Authorization", bearerPattern
-  ).saveAs("bearerToken")
-
-  def saveContextJourneyId: CheckBuilder[HttpHeaderRegexCheckType, Response, String] = headerRegex(
-    "body", contextJourneyIdPattern
-  ).saveAs("ContextJourneyId")
-
-  def extractContextJourneyId(responseBody: String): String = {
-    val pattern = """contextJourneyId=([^"]+)""".r
-    pattern.findFirstMatchIn(responseBody).map(_.group(1)).getOrElse("")
-  }
 
 }

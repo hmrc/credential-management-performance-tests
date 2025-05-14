@@ -50,7 +50,7 @@ trait CmRequests extends BaseRequests {
   def getAccountStartUrl: ActionBuilder =
     if (runLocal) {
       http("GET account start url")
-        .get("${acfStartUrl}")
+        .get("${cL200Redirect}")
         .check(
           status.is(303),
           currentLocationRegex(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?(.*)"),
@@ -58,7 +58,7 @@ trait CmRequests extends BaseRequests {
         )
     } else {
       http("GET account start url")
-        .get(s"$acfFeUrl$${acfStartUrl}")
+        .get(s"$acfFeUrl$${cL200Redirect}")
         .check(
           status.is(303),
           currentLocationRegex(s"$acfFeUrl/sign-in-to-hmrc-online-services/account/start?(.*)"),
@@ -322,4 +322,17 @@ trait CmRequests extends BaseRequests {
         status.is(200),
         currentLocationRegex("(.*)/credential-management/govgateway-id-created")
       )
+
+  // Data deletion requests
+  def postAcfDelete: ActionBuilder = http("POST Delete ACF data")
+    .post(s"$ctxUrl/identity-provider-account-context/test-only/delete-account-context/$${testOnlyNino}")
+    .check(
+      status.is(200)
+    )
+
+  def deleteBasStubAcc(): ActionBuilder = http("DELETE bas-stub Account data")
+    .delete(s"$basStubUrl/bas-stubs/account/$${randomScpCredId}")
+    .check(
+      status.is(204)
+    )
 }
