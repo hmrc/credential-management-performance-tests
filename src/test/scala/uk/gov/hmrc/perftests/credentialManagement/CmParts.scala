@@ -29,8 +29,7 @@ object CmParts extends BaseRequests with CmRequests {
       // first create a (new) account with a random subject id
       postOneLoginAccountCreate :+
         // now log this user in (does this create the unverified context??)
-        toActionBuilder(navigateToOneLoginSignInPageNoToken) :+
-        toActionBuilder(redirectToInteractPage) :+
+        toActionBuilder(navigateToCentralAuth) :+
         toActionBuilder(redirectToSignInMethodPage) :+
         toActionBuilder(postOneLoginSignInMethodPage) :+
         toActionBuilder(getOneLoginGatewayStartEndpoint) :+
@@ -41,7 +40,6 @@ object CmParts extends BaseRequests with CmRequests {
         toActionBuilder(redirectToLocationEndpoint) :+
         toActionBuilder(redirectToCentralAuth) :+
         toActionBuilder(getCentralAuthCl200) :+
-        toActionBuilder(redirectToIvInteractUrl) :+
         toActionBuilder(getIdentityAuthorizeVerificationRedirect) :+
         toActionBuilder(getIvStartUrl) :+
         toActionBuilder(getIvAuthorizePage) :+
@@ -51,8 +49,6 @@ object CmParts extends BaseRequests with CmRequests {
         toActionBuilder(redirectToLocationEndpoint) :+
         toActionBuilder(redirectToCentralAuth) :+
         toActionBuilder(getCentralAuthCl200) :+
-        toActionBuilder(redirectToIvInteractUrl) :+
-        toActionBuilder(redirectInteractUrlForFixerJourney) :+
         // now head to the ACF (IV) journey
         getAccountStartUrl :+
         getAccountLinkRecordsUrl :+
@@ -82,7 +78,10 @@ object CmParts extends BaseRequests with CmRequests {
         postRopcRegisterContinueUrl :+
         getRopcRegisterCompleteUrl :+
         getRopcCredentialCreated :+
-        getGuidancePage
+        getGuidancePage :+
+        // data removal
+        postAcfDelete :+
+        deleteBasStubAcc()
   }
 }
 
