@@ -81,7 +81,7 @@ object CmParts extends BaseRequests with CmRequests {
         getGuidancePage :+
         // data removal
         postAcfDelete :+
-        deleteBasStubAcc
+        deleteBasStubAcc()
   }
 }
 
