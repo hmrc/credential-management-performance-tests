@@ -20,6 +20,7 @@
 package uk.gov.hmrc.perftests.credentialManagement.requests
 
 import io.gatling.core.Predef._
+import io.gatling.core.action.builder.ActionBuilder
 import io.gatling.http.Predef._
 import io.gatling.http.request.builder.HttpRequestBuilder
 import uk.gov.hmrc.perftests.credentialManagement.common.AppConfig._
@@ -27,27 +28,89 @@ import uk.gov.hmrc.perftests.credentialManagement.common.RequestFunctions._
 
 object GNAPAuthRequests {
 
+  val flushAllCookies: ActionBuilder =
+    exec(flushCookieJar).actionBuilders.head
+
   val navigateToCentralAuth: HttpRequestBuilder =
-    http("Navigate to one login journey")
+    http("Get Navigate to one login journey")
       .get(s"$caCanaryFeServiceUrl/centralised-authorisation-canary/CL_200")
       .check(
         currentLocationRegex("(.*)/CL_200"),
         status.is(303),
-        header("Location").saveAs("signInPage")
+        header("Location").saveAs("confirmYourEmailAddressPage")
       )
 
-  val redirectToSignInMethodPage: HttpRequestBuilder = {
+  // Private Beta Pages Start
+
+  val redirectToConfirmYourGovUkOneLoginEmailAddressPage: HttpRequestBuilder =
     if (runLocal) {
-      http("Redirect to Sign In Method page")
-        .get("${signInPage}")
+      http("Get Redirect to Confirm your GOV.UK OneLogin email address page")
+        .get("${confirmYourEmailAddressPage}")
         .check(saveCsrfToken)
         .check(
           status.is(200)
         )
     } else {
-      http("Redirect to Sign In Method page")
-        .get(s"$oneLoginGatewayFeUrl$${signInPage}")
+      http("Get Redirect to Confirm your GOV.UK OneLogin email address page")
+        .get(s"$identityProviderGatewayFrontendUrl$${confirmYourEmailAddressPage}")
         .check(saveCsrfToken)
+        .check(
+          status.is(200)
+        )
+    }
+
+  val postToConfirmYourGovUkOneLoginEmailAddressPage: HttpRequestBuilder =
+    if (runLocal) {
+      http("Post to Confirm your GOV.UK OneLogin email address page")
+        .post("${confirmYourEmailAddressPage}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("""signInType""", "oneLogin")
+        .check(status.is(303), header("Location").saveAs("confirmYourEmailAddressPageLocation"))
+    } else {
+      http("Post to Confirm your GOV.UK OneLogin email address page")
+        .post(s"$identityProviderGatewayFrontendUrl$${confirmYourEmailAddressPage}")
+        .formParam("""csrfToken""", """${csrfToken}""")
+        .formParam("""signInType""", "oneLogin")
+        .check(status.is(303), header("Location").saveAs("confirmYourEmailAddressPageLocation"))
+    }
+
+  val getToConfirmYourGovUkOneLoginEmailAddressPage: HttpRequestBuilder =
+    http("Get to Confirm your GOV.UK OneLogin email address page")
+      .get(s"$identityProviderGatewayFrontendUrl$${confirmYourEmailAddressPageLocation}")
+      .check(saveCsrfToken)
+      .check(
+        status.is(200)
+      )
+
+  val postToConfirmYourGovUkOneLoginEmailAddressPageLocation: HttpRequestBuilder =
+    http("Post to Confirm your GOV.UK OneLogin email address Location page")
+      .post(s"$identityProviderGatewayFrontendUrl$${confirmYourEmailAddressPageLocation}")
+      .formParam("""csrfToken""", """${csrfToken}""")
+      .formParam("""profile""", "")
+      .formParam("""email-address""", StringBody("${randomEmail}"))
+      .check(saveOlfgJourneyId, status.is(303), header("Location").saveAs("startOlfgJourney"))
+
+  val getStartOlfgJourney: HttpRequestBuilder =
+    http("Get to start olfg JourneyID")
+      .get(s"$${startOlfgJourney}")
+      .check(
+        saveOlfgNonce,
+        status.is(303),
+        header("Location").saveAs("signInPage")
+      )
+
+  // Private Beta Pages End
+
+  val redirectToSignInMethodPage: HttpRequestBuilder = {
+    if (runLocal) {
+      http("Get Redirect to Sign In Method page")
+        .get("${signInPage}")
+        .check(
+          status.is(200)
+        )
+    } else {
+      http("Get Redirect to Sign In Method page")
+        .get("${signInPage}")
         .check(
           status.is(200)
         )

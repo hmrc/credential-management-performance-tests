@@ -29,11 +29,19 @@ object CmParts extends BaseRequests with CmRequests {
       // first create a (new) account with a random subject id
       postOneLoginAccountCreate :+
         // now log this user in (does this create the unverified context??)
+        flushAllCookies :+
         toActionBuilder(navigateToCentralAuth) :+
+        // Private Beta Pages Start
+        toActionBuilder(redirectToConfirmYourGovUkOneLoginEmailAddressPage) :+
+        toActionBuilder(postToConfirmYourGovUkOneLoginEmailAddressPage) :+
+        toActionBuilder(getToConfirmYourGovUkOneLoginEmailAddressPage) :+
+        toActionBuilder(postToConfirmYourGovUkOneLoginEmailAddressPageLocation) :+
+        toActionBuilder(getStartOlfgJourney) :+
+        // Private Beta Pages End
         toActionBuilder(redirectToSignInMethodPage) :+
-        toActionBuilder(postOneLoginSignInMethodPage) :+
-        toActionBuilder(getOneLoginGatewayStartEndpoint) :+
-        toActionBuilder(redirectToOneLoginGatewayStubPage) :+
+        //toActionBuilder(postOneLoginSignInMethodPage) :+
+        //toActionBuilder(getOneLoginGatewayStartEndpoint) :+
+        //toActionBuilder(redirectToOneLoginGatewayStubPage) :+
         toActionBuilder(postOneLoginGatewayStubPage) :+
         toActionBuilder(redirectToOneLoginGatewayContinueEndpoint) :+
         toActionBuilder(navigateToCompleteFixerJourney) :+
