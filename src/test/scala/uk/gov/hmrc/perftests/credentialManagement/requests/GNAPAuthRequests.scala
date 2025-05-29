@@ -110,8 +110,7 @@ object GNAPAuthRequests {
         )
     } else {
       http("Get Redirect to Sign In Method page")
-        .get(s"$oneLoginGatewayFeUrl$${signInPage}")
-        .check(saveCsrfToken)
+        .get("${signInPage}")
         .check(
           status.is(200)
         )
